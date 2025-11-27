@@ -16,6 +16,7 @@ import SkeletonLoader from "../../../shared/components/ui/SkeletonLoader";
 import { FadeIn } from "../../../shared/components/ui/FadeIn";
 import { useAuth } from "../../../core/auth/useAuth";
 import LoginModal from "../../auth/components/LoginModal";
+import { env } from "../../../core/config/env";
 
 function Modal({ open, onClose, children }) {
     React.useEffect(() => {
@@ -105,7 +106,7 @@ export default function Event() {
                         <div className="mx-auto w-full max-w-4xl">
                             {event?.banner && (
                                 <img
-                                    src={event?.banner}
+                                    src={env.VITE_API_BASE_URL + '/rooms/image/' + event?.banner}
                                     alt={event?.title}
                                     className="h-56 w-full rounded-b-2xl object-cover sm:h-72 md:h-80"
                                 />

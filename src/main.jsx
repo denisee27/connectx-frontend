@@ -24,7 +24,6 @@ function AppShell() {
     </Suspense>
   );
 }
-
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ErrorBoundary>

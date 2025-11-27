@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { env } from "../../../core/config/env";
 
 function formatEventDate(isoString) {
   if (!isoString) return "";
@@ -29,7 +30,7 @@ function formatEventDate(isoString) {
   return `${dayName}, ${dayNum} ${monthName} ${year}, ${hh}.${mm}`;
 }
 
-export default function EventCard({ title, venue, date, dateISO, thumbnail, badge, meta }) {
+export default function EventCard({ title, venue, date, dateISO, banner, badge, meta }) {
   const [category, location] = React.useMemo(() => {
     if (!meta) return [null, null];
     const parts = String(meta).split("•").map((p) => p.trim());
@@ -40,9 +41,9 @@ export default function EventCard({ title, venue, date, dateISO, thumbnail, badg
 
   return (
     <div className="hover:cursor-pointer group overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
-      {thumbnail && (
+      {banner && (
         <img
-          src={thumbnail}
+          src={env.VITE_API_BASE_URL + '/rooms/image/' + banner}
           alt={title}
           className="h-40 w-full object-cover transition-transform duration-300 group-hover:scale-[1.02] sm:h-36"
         />
@@ -76,12 +77,12 @@ export default function EventCard({ title, venue, date, dateISO, thumbnail, badg
   );
 }
 
-EventCard.propTypes = {
-  title: PropTypes.string.isRequired,
-  venue: PropTypes.string,
-  date: PropTypes.string,
-  dateISO: PropTypes.string,
-  thumbnail: PropTypes.string,
-  badge: PropTypes.string,
-  meta: PropTypes.string,
-};
+// EventCard.propTypes = {
+//   title: PropTypes.string.isRequired,
+//   venue: PropTypes.string,
+//   date: PropTypes.string,
+//   dateISO: PropTypes.string,
+//   banner: PropTypes.string,
+//   badge: PropTypes.string,
+//   meta: PropTypes.string,
+// };

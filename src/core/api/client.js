@@ -98,9 +98,9 @@ axiosInstance.interceptors.response.use(
         logger.warn("401 on auth endpoint or retry, forcing logout");
 
         // Don't logout if already on login page
-        if (currentPath !== "/login") {
-          useAuthStore.getState().logout("Authentication failed. Please log in again.", true);
-        }
+        // if (currentPath !== "/login") {
+        //   useAuthStore.getState().logout("Authentication failed. Please log in again.", true);
+        // }
 
         return Promise.reject(error);
       }

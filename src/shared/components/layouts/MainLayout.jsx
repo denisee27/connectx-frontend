@@ -2,12 +2,12 @@ import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 
 import React from "react";
-import NavbarMain from "../../../features/profiling/pages/NavbarMain";
+import Navbar from "../ui/Navbar";
 
 export const MainLayout = () => {
   return (
     <div>
-      <NavbarMain />
+      <Navbar />
       <div className="my-12">
         <Outlet />
       </div>

@@ -13,7 +13,7 @@ export const useVerifyEmail = () => {
         mutationFn: authApi.verifyEmail,
         onSuccess: (data) => {
             const { message } = data;
-            showSuccess(message);
+            showSuccess('Your email has been verified successfully.');
         },
         onError: (error) => {
             logger.warn("Verify Email failed", error);

@@ -47,8 +47,6 @@ function DashboardContent({ initial }) {
 
   // Set initial active tab based on available data
   React.useEffect(() => {
-    console.log('accessToken', accessToken);
-    console.log('123', localStorage.getItem("accessToken"))
     if (popularTabs.length > 0 && !popularTabs.find((t) => t.key === popularActive)) {
       setPopularActive(popularTabs[0].key);
     }
@@ -68,11 +66,10 @@ function DashboardContent({ initial }) {
         title: item.title,
         venue: item.address,
         slug: item.slug,
+        date: item.datetime,
+        banner: item.banner,
         dateISO: item.datetime,
         meta: `${item.category?.name || "General"} • ${item.city?.name || "City"}`,
-        thumbnail: item.category?.banner
-          ? item.category.banner.trim().replace(/`/g, "")
-          : "https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=800&auto=format&fit=crop",
       });
       return acc;
     }, {});
@@ -85,7 +82,6 @@ function DashboardContent({ initial }) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero and search */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-6">
           <div>

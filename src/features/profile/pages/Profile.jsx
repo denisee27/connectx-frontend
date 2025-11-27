@@ -1,9 +1,10 @@
 import React from "react";
-import { MapPin, Briefcase, CalendarDays, Zap, Users, Brain, Mail, Globe, User, Mars, Venus } from "lucide-react";
+import { MapPin, Briefcase, CalendarDays, Zap, Users, Brain, Mail, Globe, User, Mars, Venus, Sparkles } from "lucide-react";
 import { useProfile } from "../hooks/useProfile";
 import Markdown from "react-markdown";
 import { FadeIn } from "../../../shared/components/ui/FadeIn.jsx";
 import SkeletonLoader from "../../../shared/components/ui/SkeletonLoader.jsx";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Profile Page
@@ -13,7 +14,7 @@ import SkeletonLoader from "../../../shared/components/ui/SkeletonLoader.jsx";
  */
 export const Profile = () => {
     const { data: profile, isLoading, isError } = useProfile();
-    console.log(profile)
+    const navigate = useNavigate();
     const user = profile?.data || {
         name: "Budi Santoso",
         city: "Jakarta",
@@ -88,7 +89,10 @@ export const Profile = () => {
                         {/* Main Content */}
                         <section className="mt-6 rounded-3xl border border-border bg-card shadow-sm">
                             {/* Header */}
-                            <div className="flex items-center justify-between p-6 sm:p-8">
+
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 sm:p-8">
+
+                                {/* Bagian Kiri: Icon & Teks */}
                                 <div className="flex items-center gap-4">
                                     <div>
                                         <Brain size={30} className="text-primary" />
@@ -100,38 +104,65 @@ export const Profile = () => {
                                         </p>
                                     </div>
                                 </div>
-                                <span className="inline-flex items-center gap-2 rounded-full bg-accent/20 px-3 py-1 text-sm font-medium text-accent-foreground">
+
+                                {/* Bagian Kanan: Badge AI */}
+                                <span className="inline-flex items-center gap-2 self-center rounded-full bg-primary px-3 py-1 text-sm font-medium text-white">
                                     <Zap size={16} /> AI Powered
                                 </span>
-                            </div>
 
-                            {/* Summary */}
-                            <div className="mx-6 sm:mx-8 mb-6 rounded-2xl bg-muted p-4 sm:p-5 border border-border">
-                                <h3 className="font-semibold mb-2">Ringkasan Kepribadian</h3>
-                                <p className="text-sm sm:text-base text-muted-foreground">
-                                    <Markdown>
-                                        {profile?.descPersonal}
-                                    </Markdown>
-                                </p>
                             </div>
-
-                            {/* MBTI Type */}
-                            <div className="mt-6 p-6 sm:p-8 border-t border-border">
-                                <h3 className="font-semibold mb-3">Tipe Kepribadian</h3>
-                                <div className="rounded-2xl bg-muted p-5 border border-border">
-                                    <div className="text-3xl sm:text-4xl font-extrabold text-primary tracking-wide">
-                                        {profile?.mbti}
-                                    </div>
-                                    <p className="mt-2 text-sm text-muted-foreground">
-                                        {user.mbti.description}
+                            {profile?.personality ? (<>
+                                {/* Summary */}
+                                <div className="mx-6 sm:mx-8 mb-6 rounded-2xl bg-muted p-4 sm:p-5 border border-border">
+                                    <h3 className="font-semibold mb-2">Ringkasan Kepribadian</h3>
+                                    <p className="text-sm sm:text-base text-muted-foreground">
+                                        <Markdown>
+                                            {profile?.descPersonal}
+                                        </Markdown>
                                     </p>
                                 </div>
-                            </div>
+
+                                {/* MBTI Type */}
+                                <div className="mt-6 p-6 sm:p-8 border-t border-border">
+                                    <h3 className="font-semibold mb-3">Tipe Kepribadian</h3>
+                                    <div className="rounded-2xl bg-muted p-5 border border-border">
+                                        <div className="text-3xl sm:text-4xl font-extrabold text-primary tracking-wide">
+                                            {profile?.mbti}
+                                        </div>
+                                        <p className="mt-2 text-sm text-muted-foreground">
+                                            {user.mbti.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            </>) : (
+
+                                <div className="flex flex-col items-center justify-center pb-10 pt-5 px-4 text-center space-y-4">
+
+                                    <button
+                                        onClick={() => navigate("/profiling/questioner")} className="cursor-pointer group relative inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 rounded-full text-white font-bold text-lg shadow-lg hover:shadow-blue-500/25 hover:scale-105 transition-all duration-300">
+                                        <Sparkles className="w-5 h-5 animate-pulse text-white" />
+                                        <span>Generate Your Personality</span>
+                                        <div className="absolute -inset-1 bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 rounded-full blur opacity-30 group-hover:opacity-60 transition duration-200"></div>
+                                    </button>
+
+                                    {/* Wording Menarik */}
+                                    <div className="max-w-md space-y-1">
+                                        <h3 className="text-lg font-semibold text-gray-800">
+                                            Discover Your Inner Traveler
+                                        </h3>
+                                        <p className="text-sm text-gray-500 leading-relaxed">
+                                            Not sure what fits you? Let our AI analyze your vibe and craft
+                                            a personalized travel profile just for you.
+                                        </p>
+                                    </div>
+                                </div>
+
+                            )}
                         </section>
                     </>
                 )}
             </FadeIn>
-        </div>
+        </div >
     );
 };
 
@@ -162,7 +193,7 @@ const NavChip = ({ children, active = false }) => (
 const StatCard = ({ icon: Icon, label, value }) => (
     <div className="rounded-2xl bg-card border border-border p-4 text-center shadow-sm">
         <div className="mx-auto mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
-            <Icon size={18} className="text-muted-foreground" />
+            <Icon size={18} className="text-secondary" />
         </div>
         <div className="text-2xl font-bold leading-none">{value}</div>
         <div className="text-xs text-muted-foreground mt-1">{label}</div>

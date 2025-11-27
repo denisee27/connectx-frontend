@@ -20,8 +20,14 @@ export default function LoginPage() {
   } = useForm({ resolver: zodResolver(loginSchema) });
 
   const onSubmit = (data) => {
-    logger.info("calling data");
-    performLogin(data);
+    performLogin(data, {
+      onSuccess: () => {
+        navigate("/home");
+      },
+      onError: (err) => {
+        setServerError(err.message || "An unexpected error occurred.");
+      },
+    });
   };
 
   return (

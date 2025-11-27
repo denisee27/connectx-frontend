@@ -19,8 +19,8 @@ const profileSchema = z.object({
         invalid_type_error: "Invalid date format",
     }),
     gender: z.string().min(1, "Gender is required"),
-    cityId: z.string().min(1, "City is required"),
-    countryId: z.string().min(1, "Country is required"),
+    city: z.string().min(1, "City is required"),
+    country: z.string().min(1, "Country is required"),
     occupation: z.string().min(2, "Occupation is required"),
     phoneNumber: z.string().min(10, "Phone number must be at least 10 characters"),
     email: z.string().email("Invalid email address"),
@@ -239,9 +239,9 @@ export default function FormProfile() {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Country *</label>
                             <select
-                                {...register("countryId")}
+                                {...register("country")}
                                 onChange={(e) => setSelectedCountry(e.target.value)}
-                                className="px-2 mt-1 h-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-color focus:ring-primary-color bg-white"
+                                className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
                             >
                                 <option value="">Select a country</option>
                                 {isLoadingCountries ? (
@@ -256,16 +256,16 @@ export default function FormProfile() {
                                     ))
                                 )}
                             </select>
-                            {errors.countryId && (
-                                <p className="mt-1 text-sm text-red-600">{errors.countryId.message}</p>
+                            {errors.country && (
+                                <p className="mt-1 text-sm text-red-600">{errors.country.message}</p>
                             )}
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
                             <select
-                                {...register("cityId")}
+                                {...register("city")}
                                 disabled={!selectedCountry || isLoadingCities || isErrorCities}
-                                className="px-2 mt-1 h-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-color focus:ring-primary-color bg-white disabled:bg-gray-100"
+                                className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:bg-gray-100"
                             >
                                 <option value="">Select a city</option>
                                 {isLoadingCities ? (
@@ -280,8 +280,8 @@ export default function FormProfile() {
                                     ))
                                 )}
                             </select>
-                            {errors.cityId && (
-                                <p className="mt-1 text-sm text-red-600">{errors.cityId.message}</p>
+                            {errors.city && (
+                                <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>
                             )}
                         </div>
                     </div>

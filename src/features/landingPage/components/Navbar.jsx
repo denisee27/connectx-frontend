@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ChevronDown, Globe, LogOut } from "lucide-react";
 import logo from "../../../assets/logo/main-logo-black.svg";
 import StaggeredMenu from "../utils/staggeredMenu/StaggeredMenu";
 import { resetProfilingAll } from "../../profiling/utils/reset";

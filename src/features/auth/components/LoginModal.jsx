@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLogin } from "../hooks/useLogin";
 import { X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import logger from "../../../core/utils/logger";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -40,30 +42,33 @@ function Modal({ open, onClose, children }) {
 export default function LoginModal({ isOpen, onClose, onSuccess }) {
   const [serverError, setServerError] = useState("");
   const { mutateAsync: performLogin, isPending } = useLogin();
-
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(loginSchema),
-    mode: "onBlur",
-  });
+    formState: { errors, isSubmitting },
+  } = useForm({ resolver: zodResolver(loginSchema), });
 
   const onSubmit = async (data) => {
-    setServerError("");
     try {
-      await performLogin(data);
-      onSuccess();
+      await performLogin(data, {
+        onSuccess: (res) => {
+          onSuccess?.(res);
+        },
+        onError: (err) => {
+          setServerError(err.message || "An unexpected error occurred.");
+        },
+      });
     } catch (err) {
-      setServerError(err?.message || "Login failed. Please try again.");
+      // This catch block might be redundant if onError is handled in mutate, but good for safety.
+      setServerError(err.message || "An unexpected error occurred.");
     }
   };
 
   return (
     <Modal open={isOpen} onClose={onClose}>
       <div className="p-8">
-        <h2 className="mb-6 text-center text-3xl font-bold text-gray-800">Welcome Back</h2>
+        <h2 className="mb-6 text-center text-3xl font-bold text-gray-800">Sign In</h2>
         <form onSubmit={handleSubmit(onSubmit)}>
           {serverError && <p className="mb-4 text-center text-sm text-red-600">{serverError}</p>}
           <div className="mb-4">
@@ -94,7 +99,13 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
             {isPending ? "Logging in..." : "Login"}
           </button>
         </form>
+        <p className="mt-4 text-center text-sm text-gray-600">
+          Don't have an account?{" "}
+          <button onClick={() => (onClose(), navigate("/register"))} className="cursor-pointer text-primary-color font-medium">
+            Sign Up
+          </button>
+        </p>
       </div>
-    </Modal>
+    </Modal >
   );
 }

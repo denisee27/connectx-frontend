@@ -1,5 +1,31 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Sparkles, Send } from "lucide-react";
+import { useGetSessionChat, useSendMessage } from "../hooks/useNewEvent";
+import Markdown from "react-markdown";
+import { SyncLoader } from "react-spinners";
+
+const LoadingIndicator = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-md transition-all">
+        <div className="flex flex-col items-center gap-6 p-8 rounded-2xl animate-in fade-in zoom-in duration-300">
+
+            {/* Spinner Baru: Double Ring dengan Warna AI */}
+            <div className="relative h-16 w-16">
+                <div className="absolute h-full w-full rounded-full border-4 border-indigo-100 opacity-50"></div>
+                <div className="absolute h-full w-full rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"></div>
+            </div>
+
+            {/* Text Section */}
+            <div className="text-center space-y-2">
+                <h3 className="text-xl font-bold text-gray-800 tracking-tight">
+                    Initializing ConnectX AI...
+                </h3>
+                <p className="text-sm text-gray-500 font-medium animate-pulse">
+                    Calibrating your personal session
+                </p>
+            </div>
+        </div>
+    </div>
+);
 
 /**
  * NewEvent Page
@@ -9,13 +35,15 @@ import { Sparkles, Send } from "lucide-react";
  * - Validasi dasar form
  */
 export const NewEvent = () => {
-    const { mutateAsync: startSession } = useFormSession();
+    const { mutateAsync: startSession, isPending: isPendingSession } = useGetSessionChat();
+    const { mutateAsync: sendMessage } = useSendMessage();
     const [step, setStep] = useState("intro"); // intro | chat | form
+    const [sessionId, setSessionId] = useState(null);
+
     const [messages, setMessages] = useState([
         {
             role: "assistant",
-            text:
-                "Halo! Ceritakan acara apa yang ingin kamu buat. Kami siap membantumu merencanakan acara yang menyenangkan!",
+            text: "Hi there! Tell me what kind of event you have in mind. I'm here to help you plan a truly memorable experience! ✨",
         },
     ]);
     const [input, setInput] = useState("");
@@ -44,22 +72,27 @@ export const NewEvent = () => {
         []
     );
 
-    const handleSend = () => {
-        const text = input.trim();
-        if (!text) return;
+    useEffect(() => {
+        getSessionId();
+    }, []);
 
-        // Masukkan pesan user
-        const userMsg = { role: "user", text };
-        // Respon asisten yang ramah
-        const assistantMsg = {
-            role: "assistant",
-            text:
-                "Wah, ide yang menarik! Saya dapat membantu kamu membuat acara tersebut. Berdasarkan deskripsi kamu, saya merekomendasikan untuk membuat acara dengan detail yang telah kamu sebutkan. Apakah kamu ingin saya siapkan form untuk melengkapi detail acara?",
-        };
+    const getSessionId = async () => {
+        const id = await startSession();
+        setSessionId(id?.data?.sessionId);
+    }
 
-        setMessages((prev) => [...prev, userMsg, assistantMsg]);
+    const handleSend = async () => {
+        const data = input.trim();
+        if (!data) return;
         setInput("");
-        setStep("chat");
+        const userMsg = { role: "user", text: data, };
+        setMessages((prev) => [...prev, userMsg, { role: "loading", text: '' }]);
+        const restMsg = await sendMessage({ data, sessionId });
+        console.log('restMsg', restMsg);
+        setMessages((prevMessages) => prevMessages.slice(0, -1));
+        const assistantMsg = { role: "assistant", text: restMsg?.data?.plainText, };
+        setMessages((prev) => [...prev, assistantMsg]);
+        // setStep("chat");
     };
 
     const validateForm = () => {
@@ -103,6 +136,10 @@ export const NewEvent = () => {
         setSubmitState("success");
     };
 
+    if (isPendingSession || !sessionId) {
+        return <LoadingIndicator />;
+    }
+
     return (
         <div className="min-h-screen mx-auto max-w-3xl bg-white px-4 sm:px-6 text-foreground">
             {/* Header */}
@@ -111,8 +148,10 @@ export const NewEvent = () => {
                     <Sparkles size={20} />
                 </div>
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold">Buat Acara</h1>
-                    <p className="text-sm text-muted-foreground">Mulai dari ide, lanjut ke detail.</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold">Craft Your Experience</h1>
+                    <p className="text-sm text-muted-foreground">
+                        From a simple spark of an idea to a perfect plan.
+                    </p>
                 </div>
             </div>
 
@@ -130,7 +169,7 @@ export const NewEvent = () => {
                             onClick={() => setStep("form")}
                             className="mx-auto block rounded-full bg-accent px-5 py-2 font-semibold text-black shadow-sm transition-colors hover:bg-primary"
                         >
-                            Buat Acara
+                            Create Event
                         </button>
                     </div>
                 )}
@@ -148,7 +187,7 @@ export const NewEvent = () => {
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter") handleSend();
                                 }}
-                                placeholder="Jelaskan acara yang ingin kamu buat..."
+                                placeholder="Tell me about the event you'd like to create..."
                                 className="flex-1 bg-transparent px-3 py-2 text-sm sm:text-base focus:outline-none"
                             />
                             <button
@@ -315,7 +354,15 @@ const ChatBubble = ({ role, text }) => {
                     animation: "fadeInUp 280ms ease-out both",
                 }}
             >
-                <p className="text-sm sm:text-base leading-relaxed">{text}</p>
+                <p className="text-sm sm:text-base leading-relaxed">
+                    {role === "loading" ? (
+                        <div className="h-2 justify-center items-center flex px-2 py-1">
+                            <SyncLoader size={6} color="#FF9836" />
+                        </div>
+                    ) : (
+                        <Markdown>{text}</Markdown>
+                    )}
+                </p>
             </div>
             {/* lightweight keyframe for smooth pop-in */}
             <style>{`

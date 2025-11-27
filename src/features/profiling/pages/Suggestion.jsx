@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useProfilling } from "../hooks/useProfiling";
 import { useAuthStore } from "../../auth/stores/authStore";
 import { buildProfilingPayload } from "../utils/payload";
 import { resetProfilingAll } from "../utils/reset";
+import { Calendar, MapPin } from "lucide-react";
 
 function Loading() {
     return (
@@ -27,40 +28,49 @@ function Loading() {
     );
 }
 
-function EventCard({ slug, image, title, venue, category, city, dateText, onDetail }) {
+function EventCard({ slug, banner, title, venue, category, city, datetime, onDetail }) {
     return (
-        <article
-            role="article"
-            className="group overflow-hidden rounded-2xl bg-white ring-1 ring-gray-200 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-within:ring-2 focus-within:ring-orange-500"
+        <div
+            key={slug}
+            className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden text-left flex flex-col"
         >
-            <div className="relative h-44 md:h-48 w-full overflow-hidden rounded-t-2xl">
+            <div className="relative h-48 w-full overflow-hidden">
                 <img
-                    src={image}
+                    src={banner}
                     alt={title}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                    decoding="async"
+                    className="w-full h-full object-cover"
                 />
+                <span
+                    className={`absolute top-3 right-3 text-xs font-semibold px-3 py-1 rounded-full text-black bg-[var(--color-primary)]`}>
+                    {category?.name}
+                </span>
             </div>
-            <div className="p-5">
-                <h3 className="text-xl font-semibold text-gray-900 tracking-tight">{title}</h3>
-                <p className="mt-1 text-sm text-gray-600">{venue}</p>
-                <p className="mt-3 text-sm text-gray-700">
-                    <span className="font-medium text-gray-800">{category?.name}</span>
-                    <span className="mx-2 text-gray-400">•</span>
-                    <span className="text-gray-700">{city?.name}</span>
-                </p>
-                <p className="mt-3 text-base font-medium text-gray-900">{dateText}</p>
+
+            <div className="p-4 flex flex-col flex-grow">
+                <div className="flex-grow">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 min-h-[3.5rem] [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical] overflow-hidden">
+                        {title}
+                    </h3>
+
+                    <div className="flex items-center text-sm text-gray-700 mb-1">
+                        <span className="mr-2 text-sm"><Calendar size={15} /></span>
+                        <span>{datetime}</span>
+                    </div>
+
+                    <div className="flex items-center text-sm text-gray-700 mb-4">
+                        <span className="mr-2 text-sm"><MapPin size={15} /></span>
+                        <span>{venue}, {city?.name}</span>
+                    </div>
+                </div>
+
                 <button
-                    type="button"
-                    aria-label={`Lihat detail untuk ${title}`}
                     onClick={() => onDetail?.(slug)}
-                    className="mt-4 w-full rounded-full bg-primary text-white py-2.5 font-semibold tracking-wide transition-colors duration-150 hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                    className="w-full bg-primary text-white font-semibold py-2 rounded-full hover:bg-secondary cursor-pointer transition duration-300 mt-auto"
                 >
                     Detail Event
                 </button>
             </div>
-        </article>
+        </div>
     );
 }
 
@@ -73,56 +83,59 @@ export default function Suggestion() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [suggestedRooms, setSuggestedRooms] = useState([]);
+    const submitted = useRef(false);
 
     useEffect(() => {
+        if (submitted.current) return;
+
         if (!profileData) {
             setError("Data profil tidak ditemukan. Silakan kembali ke halaman sebelumnya.");
             setLoading(false);
             return;
         }
-
-        const submitProfile = async () => {
-            try {
-                const answersRaw = localStorage.getItem("profilingAnswers");
-                const prefsRaw = localStorage.getItem("profilingPreferences");
-                const meetUpRaw = localStorage.getItem("profilingMeetUpPref");
-                const answers = answersRaw ? JSON.parse(answersRaw) : null;
-                const preferences = prefsRaw ? JSON.parse(prefsRaw) : [];
-                const meetUp = meetUpRaw ? JSON.parse(meetUpRaw) : "";
-
-                if (!answers || !Array.isArray(answers)) {
-                    throw new Error("Jawaban quiz tidak lengkap.");
-                }
-
-                // const today = new Date();
-                // const birthDate = new Date(profileData.bornDate);
-                // let age = today.getFullYear() - birthDate.getFullYear();
-                // const m = today.getMonth() - birthDate.getMonth();
-                // if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                //     age--;
-                // }
-
-                const payload = buildProfilingPayload({ ...profileData }, answers);
-                payload.preferences = preferences;
-                payload.meetUpPreference = meetUp;
-
-                const response = await postProfiling({ data: payload });
-                console.log('res:', response)
-                console.log('response.accessToken', response.data.accessToken)
-                setAuth({ user: null, accessToken: response.data.accessToken });
-                setSuggestedRooms(response.data.rooms);
-
-                resetProfilingAll(() => { });
-            } catch (e) {
-                const message = e?.response?.data?.message || e?.message || "Gagal mengirim data";
-                setError(message);
-            } finally {
-                setLoading(false);
-            }
-        };
-
+        submitted.current = true;
         submitProfile();
-    }, []);
+    }, [profileData]);
+
+    const submitProfile = async () => {
+        try {
+            const answersRaw = localStorage.getItem("profilingAnswers");
+            const prefsRaw = localStorage.getItem("profilingPreferences");
+            const meetUpRaw = localStorage.getItem("profilingMeetUpPref");
+            const answers = answersRaw ? JSON.parse(answersRaw) : null;
+            const preferences = prefsRaw ? JSON.parse(prefsRaw) : [];
+            const meetUp = meetUpRaw ? JSON.parse(meetUpRaw) : "";
+
+            if (!answers || !Array.isArray(answers)) {
+                throw new Error("Jawaban quiz tidak lengkap.");
+            }
+
+            // const today = new Date();
+            // const birthDate = new Date(profileData.bornDate);
+            // let age = today.getFullYear() - birthDate.getFullYear();
+            // const m = today.getMonth() - birthDate.getMonth();
+            // if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            //     age--;
+            // }
+
+            const payload = buildProfilingPayload({ ...profileData }, answers);
+            payload.preferences = preferences;
+            payload.meetUpPreference = meetUp;
+
+            const response = await postProfiling({ data: payload });
+            // console.log('res:', response)
+            // console.log('response.accessToken', response.data.accessToken)
+            // setAuth({ user: null, accessToken: response.data.accessToken });
+            setSuggestedRooms(response.data.rooms);
+
+            resetProfilingAll(() => { });
+        } catch (e) {
+            const message = e?.response?.data?.message || e?.message || "Gagal mengirim data";
+            setError(message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const goDashboard = () => {
         navigate("/home", { replace: true });

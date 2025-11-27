@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useVerifyEmail } from "../hooks/useVerifyEmail.js";
 
 export default function VerifyEmailPage() {
@@ -7,7 +7,7 @@ export default function VerifyEmailPage() {
     const [searchParams] = useSearchParams();
     const tokenFromQuery = searchParams.get("token");
     const verificationToken = tokenParam || tokenFromQuery || "";
-
+    const navigate = useNavigate();
     const [status, setStatus] = useState(verificationToken ? "pending" : "error");
     const [statusMessage, setStatusMessage] = useState(
         verificationToken
@@ -30,7 +30,7 @@ export default function VerifyEmailPage() {
                         response?.data?.message ||
                         "Your email has been verified successfully.";
                     setStatus("success");
-                    setStatusMessage(message);
+                    navigate("/login");
                 },
                 onError: (error) => {
                     setStatus("error");
@@ -58,7 +58,7 @@ export default function VerifyEmailPage() {
                     <div className="space-y-3">
                         <Link
                             to="/login"
-                            className="inline-flex w-full justify-center rounded-md bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                            className="inline-flex w-full justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
                         >
                             Go to login
                         </Link>
@@ -67,8 +67,8 @@ export default function VerifyEmailPage() {
                 {isError && (
                     <div className="space-y-3">
                         <Link
-                            to="/forgot-password"
-                            className="inline-flex w-full justify-center rounded-md bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                            to="/login"
+                            className="inline-flex w-full justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
                         >
                             Request new verification link
                         </Link>

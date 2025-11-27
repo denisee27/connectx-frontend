@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 // Submission now happens in FormProfile per revised flow
 import { useModal } from "../../../core/stores/uiStore";
-import { Loader2, TriangleAlert } from "lucide-react";
+import { Loader2, Sparkles, TriangleAlert } from "lucide-react";
 import { useQuestions } from "../hooks/useProfiling";
 
 /**
@@ -35,7 +35,6 @@ function ProgressBar({ current, total }) {
 export default function Questioner() {
     const navigate = useNavigate();
     const { data: questionsData, isPending: isPendingQuestions, error: questionsError } = useQuestions();
-    console.log('123', questionsData)
     const questions = useMemo(() => questionsData?.data?.mbti_questions || [], [questionsData]);
 
     const total = questions.length;
@@ -241,14 +240,26 @@ export default function Questioner() {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
             <div className="w-full max-w-2xl bg-white shadow-md rounded-2xl p-8">
                 {isPendingQuestions ? (
-                    <div className="flex flex-col items-center justify-center py-10">
-                        {/* Icon Spinner */}
-                        <Loader2 className="h-10 w-10 animate-spin text-blue-600 mb-4" />
+                    <div className="flex flex-col items-center justify-center space-y-3 text-center p-6">
 
-                        {/* Text dengan animasi pulse halus */}
-                        <p className="text-gray-500 text-sm font-medium animate-pulse">
-                            Sedang menyiapkan pertanyaan...
+                        {/* Loading Spinner / Icon AI */}
+                        <div className="relative flex h-12 w-12">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-12 w-12 bg-indigo-500 items-center justify-center">
+                                <Sparkles className="h-6 w-6 text-white animate-pulse" />
+                            </span>
+                        </div>
+
+                        {/* Wording Utama */}
+                        <h3 className="text-lg font-semibold text-gray-900 animate-pulse">
+                            Curating your personalized session...
+                        </h3>
+
+                        {/* Wording Pendukung */}
+                        <p className="text-sm text-gray-500 max-w-xs">
+                            Our AI is crafting specific questions to understand your travel preferences better.
                         </p>
+
                     </div>
                 ) : questionsError ? (
                     <div className="text-center">

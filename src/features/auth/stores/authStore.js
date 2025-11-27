@@ -37,7 +37,6 @@ export const useAuthStore = create((set, get) => ({
    * @param {{ user: object, accessToken: string }} authData
    */
   setAuth: ({ user, accessToken }) => {
-    console.log('setAtuh at setAuth', accessToken)
     const currentUser = get().user;
     const normalizedUser = normalizeUserData(user) ?? currentUser ?? null;
     localStorage.setItem("accessToken", accessToken);

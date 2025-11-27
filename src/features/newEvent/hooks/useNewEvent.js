@@ -4,8 +4,8 @@ import { getSessionChat, sendMessage } from "../api/api";
 export const useGetSessionChat = () => {
     return useCreateMutation({
         queryKey: ["getSessionChat"],
-        showSuccessToast: false,
         mutationFn: () => getSessionChat(),
+        showSuccessToast: false,
     });
 }
 

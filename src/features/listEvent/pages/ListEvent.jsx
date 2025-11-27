@@ -2,6 +2,7 @@ import React from "react";
 import { useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import SectionHeader from "../../dashboard/components/SectionHeader.jsx";
+import EventFilter from "../components/EventFilter.jsx";
 import EventCard from "../../dashboard/components/EventCard.jsx";
 import PopularTabs from "../../dashboard/components/PopularTabs.jsx";
 import { useListEvent } from "../hooks/useListEvent.js";
@@ -118,22 +119,32 @@ export const ListEvent = () => {
     const navigate = useNavigate();
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
+    const [filters, setFilters] = useState({});
 
-    const filters = useMemo(() => {
+    const queryFilters = useMemo(() => {
         return {
             page,
             limit,
+            title: filters.title,
+            categories: filters.categories,
+            country: filters.country,
+            sort: filters.sort,
         };
-    }, [page, limit]);
+    }, [page, limit, filters]);
 
     const {
         data: { data: eventList = [], meta } = {},
         isLoading,
         isFetching,
         error,
-    } = useListEvent(filters);
+    } = useListEvent(queryFilters);
 
     const handleDetail = useCallback((id) => navigate(`/home/event/${id}`), [navigate]);
+
+    const handleFilterChange = useCallback((newFilters) => {
+        setPage(1);
+        setFilters(newFilters);
+    }, []);
 
     const Pagination = () => {
         if (!meta || meta.totalPages <= 1) return null;
@@ -152,7 +163,7 @@ export const ListEvent = () => {
                     disabled={currentPage === 1}
                     className="rounded-full border border-gray-300 px-3 py-1.5 text-sm text-gray-800 transition-colors disabled:opacity-50 hover:bg-gray-100"
                 >
-                    Sebelumnya
+                    Previous
                 </button>
 
                 <div className="flex items-center gap-2">
@@ -163,7 +174,7 @@ export const ListEvent = () => {
                             className={
                                 "h-8 w-8 rounded-full text-sm transition-colors " +
                                 (currentPage === n
-                                    ? "bg-gray-900 text-white"
+                                    ? "bg-primary text-white"
                                     : "border border-gray-300 bg-white text-gray-800 hover:bg-gray-100")
                             }
                         >
@@ -177,7 +188,7 @@ export const ListEvent = () => {
                     disabled={currentPage === totalPages}
                     className="rounded-full border border-gray-300 px-3 py-1.5 text-sm text-gray-800 transition-colors disabled:opacity-50 hover:bg-gray-100"
                 >
-                    Selanjutnya
+                    Next
                 </button>
             </div>
         );
@@ -186,7 +197,9 @@ export const ListEvent = () => {
     return (
         <div className="min-h-screen bg-white">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <SectionHeader title="Daftar Event Unggulan" />
+                <SectionHeader title="Discover Highlights" />
+
+                <EventFilter onFilterChange={handleFilterChange} />
 
                 {/* Grid */}
                 <div className="mt-6">
@@ -227,3 +240,4 @@ export const ListEvent = () => {
         </div>
     );
 };
+
