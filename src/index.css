@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --color-glass: hsl(0, 0%, 100%, 0.97);
+  --color-border-glass: hsl(0, 0%, 100%, 0.97);
+  --color-foreground: hsl(0 0% 13%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(0 0% 13%);
+
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(0 0% 13%);
+
+  --color-primary: #FF9836;
+  --color-primary-foreground: hsl(0 0% 100%);
+
+  --color-secondary: #FF7A2F;
+  --color-secondary-foreground: hsl(0 0% 13%);
+
+  --color-muted: hsl(0 0% 96%);
+  --color-muted-foreground: hsl(0 0% 45%);
+
+  --color-accent: hsl(47 99% 59%);
+  --color-accent-foreground: hsl(0 0% 13%);
+
+  --color-destructive: hsl(0 84.2% 60.2%);
+  --color-destructive-foreground: hsl(0 0% 98%);
+
+  --color-border: hsl(0 0% 90%);
+  --color-input: hsl(0 0% 90%);
+  --color-ring: hsl(29 100% 61%);
+
+  --radius: 1.5rem;
+
+  --color-sidebar-background: hsl(0 0% 98%);
+  --color-sidebar-foreground: hsl(240 5.3% 26.1%);
+  --color-sidebar-primary: hsl(240 5.9% 10%);
+  --color-sidebar-primary-foreground: hsl(0 0% 98%);
+  --color-sidebar-accent: hsl(240 4.8% 95.9%);
+  --color-sidebar-accent-foreground: hsl(240 5.9% 10%);
+  --color-sidebar-border: hsl(220 13% 91%);
+  --color-sidebar-ring: hsl(217.2 91.2% 59.8%);
+}
+
+
+/* Toast animations */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-out;
+}
