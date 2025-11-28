@@ -1,5 +1,5 @@
 import { useCreateMutation } from "../../../core/queries/mutationHelpers";
-import { getSessionChat, sendMessage } from "../api/api";
+import { createRoom, getSessionChat, sendMessage } from "../api/api";
 
 export const useGetSessionChat = () => {
     return useCreateMutation({
@@ -14,6 +14,14 @@ export const useSendMessage = () => {
         queryKey: ["sendMessage"],
         showSuccessToast: false,
         mutationFn: ({ data, sessionId }) => sendMessage(data, sessionId),
+    });
+}
+
+export const useCreateRoom = () => {
+    return useCreateMutation({
+        queryKey: ["createRoom"],
+        mutationFn: (roomData) => createRoom(roomData),
+        showSuccessToast: true,
     });
 }
 

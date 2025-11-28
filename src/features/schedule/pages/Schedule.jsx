@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { usePastEvent, useUpcomingEvent } from "../hooks/useSchedule";
 import { FadeIn } from "../../../shared/components/ui/FadeIn.jsx";
 import SkeletonLoader from "../../../shared/components/ui/SkeletonLoader.jsx";
+import { env } from "../../../core/config/env.js";
 
 const groupEventsByDay = (events) => {
     if (!Array.isArray(events)) {
@@ -27,7 +28,7 @@ const groupEventsByDay = (events) => {
             time: eventDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
             location: event.address || event.city?.name || "N/A",
             guests: event.maxParticipant != null ? `${event.maxParticipant} participants` : "N/A",
-            thumbnail: event.category?.banner?.trim().replace(/`/g, '') || "https://via.placeholder.com/144",
+            banner: event?.banner?.trim().replace(/`/g, '') || "https://via.placeholder.com/144",
         };
 
         acc[dayKey].items.push(formattedEvent);
@@ -167,7 +168,7 @@ const TabButton = ({ active, children, onClick }) => (
 );
 
 /** Event Card */
-const EventCard = ({ time, title, location, guests, thumbnail, onClick }) => (
+const EventCard = ({ time, title, location, guests, banner, onClick }) => (
     <div onClick={onClick} className="cursor-pointer flex items-center justify-between gap-3 md:gap-6 rounded-2xl border border-border bg-card p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex-1 min-w-0">
             <div className="text-xs md:text-sm text-muted-foreground">{time}</div>
@@ -184,8 +185,8 @@ const EventCard = ({ time, title, location, guests, thumbnail, onClick }) => (
         {/* Thumbnail */}
         <div className="shrink-0">
             <img
-                src={thumbnail}
-                alt="event thumbnail"
+                src={env.VITE_API_BASE_URL + '/rooms/image/' + banner}
+                alt={`${title}`}
                 className="h-24 w-24 md:h-36 md:w-36 rounded-xl object-cover"
                 loading="lazy"
                 decoding="async"
