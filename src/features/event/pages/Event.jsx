@@ -1,13 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import {
-  MapPin,
-  CalendarDays,
-  Users,
-  Tag,
-  X,
-  CheckCircle2,
-} from "lucide-react";
+import { MapPin, CalendarDays, Users, Tag, X, CheckCircle2 } from "lucide-react";
 import { useEvent } from "../hooks/useEvent";
 import { format } from "date-fns";
 import SkeletonLoader from "../../../shared/components/ui/SkeletonLoader";
@@ -228,7 +221,8 @@ function PaymentModal({ isOpen, onClose, onSuccess, event, price }) {
   const buildCustomerPayload = () => {
     if (!user) return undefined;
 
-    const derivedName = [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.name;
+    const derivedName =
+      [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.name;
     const [first, ...rest] = (derivedName || "").split(/\s+/).filter(Boolean);
 
     return {

@@ -224,7 +224,7 @@ export const ListEvent = () => {
                                                 venue={event.city.name}
                                                 dateISO={event.datetime}
                                                 meta={`${event.category.name} • ${event.city.name}`}
-                                                thumbnail={event.category.banner}
+                                                banner={event.banner}
                                             />
                                         </div>
                                     ))}
