@@ -17,15 +17,15 @@ const groupEventsByDay = (events) => {
 
         if (!acc[dayKey]) {
             acc[dayKey] = {
-                dayLabel: eventDate.toLocaleDateString("id-ID", { day: "2-digit", month: "short" }),
-                dayName: eventDate.toLocaleDateString("id-ID", { weekday: "long" }),
+                dayLabel: eventDate.toLocaleDateString("en", { day: "2-digit", month: "short" }),
+                dayName: eventDate.toLocaleDateString("en", { weekday: "long" }),
                 items: [],
             };
         }
 
         const formattedEvent = {
             ...event,
-            time: eventDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+            time: eventDate.toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" }),
             location: event.address || event.city?.name || "N/A",
             guests: event.maxParticipant != null ? `${event.maxParticipant} participants` : "N/A",
             banner: event?.banner?.trim().replace(/`/g, '') || "https://via.placeholder.com/144",
@@ -51,7 +51,6 @@ export const Schedule = () => {
 
     const { data: upcomingEvent, refetch: refetchUpcoming, isLoading: isLoadingUpcoming } = useUpcomingEvent();
     const { data: pastEvent, refetch: refetchPast, isLoading: isLoadingPast } = usePastEvent();
-    console.log('upcoming', upcomingEvent)
     useEffect(() => {
         if (activeTab === "upcoming") {
             refetchUpcoming();

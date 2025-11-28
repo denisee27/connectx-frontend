@@ -22,9 +22,10 @@ export const Navbar = ({ scrollToElement }) => {
         { label: 'LinkedIn', link: 'https://linkedin.com' }
     ];
 
-    useEffect(() => {
-    }, []);
-
+    const handleStartNow = () => {
+        resetProfilingAll();
+        navigate("/profiling/questioner");
+    }
     const handleSignOut = async () => {
         navigate("/");
     };
@@ -73,7 +74,7 @@ export const Navbar = ({ scrollToElement }) => {
                                 <button onClick={() => navigate("/login")} className="rounded-xl px-4 py-2 bg-transparent border-2 border-black text-black font-semibold hover:bg-gray-800 hover:text-white cursor-pointer transition-all duration-150 text-sm" >
                                     Sign In
                                 </button>
-                                <button className="rounded-xl px-4 py-2 bg-black text-white font-semibold hover:bg-gray-800 cursor-pointer transition-all duration-150 text-sm" onClick={() => { resetProfilingAll(); navigate("/profiling/questioner"); }} >
+                                <button className="rounded-xl px-4 py-2 bg-black text-white font-semibold hover:bg-gray-800 cursor-pointer transition-all duration-150 text-sm" onClick={() => handleStartnow()} >
                                     Start Now
                                 </button>
                             </div>

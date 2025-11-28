@@ -53,7 +53,6 @@ export const Setting = () => {
     const fileInputRef = useRef(null);
 
     const updateUser = useUpdateUser();
-    const uploadAvatar = useUploadUserAvatar();
 
     const passwordSectionVisible = currentPassword.length > 0;
 
@@ -138,7 +137,10 @@ export const Setting = () => {
     const addPreferenceToken = () => {
         const token = prefInput.trim();
         if (!token) return;
-        setPreferences((prev) => (prev.includes(token) ? prev : [...prev, token]));
+        setPreferences((prev) => {
+            const exists = prev.some((p) => (typeof p === "object" ? p.name === token : p === token));
+            return exists ? prev : [...prev, token];
+        });
         setPrefInput("");
     };
 
@@ -187,28 +189,45 @@ export const Setting = () => {
         }
 
         try {
-            if (avatarFile && userData?.id) {
-                await uploadAvatar.mutateAsync({ userId: userData.id, file: avatarFile });
-            }
-
             if (userData?.id) {
+                // Rename avatar file to UUID before upload
+                const renamedAvatarFile = (() => {
+                    if (!avatarFile) return undefined;
+                    const uuid = (typeof crypto !== "undefined" && crypto.randomUUID)
+                        ? crypto.randomUUID()
+                        : `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+                    const mime = avatarFile.type || "application/octet-stream";
+                    const ext = mime.includes("png")
+                        ? "png"
+                        : mime.includes("jpeg")
+                            ? "jpeg"
+                            : mime.includes("jpg")
+                                ? "jpg"
+                                : "bin";
+                    const newName = `${uuid}.${ext}`;
+                    return new File([avatarFile], newName, { type: avatarFile.type });
+                })();
+
                 const payload = {
                     name,
                     email,
                     phoneNumber: phone || undefined,
-                    // kirim undefined jika address kosong agar backend bisa mengabaikan
-                    // sesuai schema backend: gender adalah enum ["male","female"], huruf kecil
                     gender: gender || undefined,
-                    // sesuai schema backend: countryId & cityId bertipe string
                     countryId: countryId || undefined,
                     cityId: cityId || undefined,
                     bornDate: bornDate ? new Date(bornDate).toISOString() : undefined,
+                    // Preferences: hanya string inputan user
                     preferences: Array.isArray(preferences)
-                        ? preferences.map((p) => String(p).trim()).filter(Boolean)
+                        ? preferences
+                            .map((p) => (typeof p === "object" && p.name ? p.name : String(p)))
+                            .map((s) => s.trim())
+                            .filter(Boolean)
                         : undefined,
                     currentPassword: currentPassword || undefined,
                     newPassword: newPassword || undefined,
                     confirmPassword: confirmPassword || undefined,
+                    // Sertakan foto biner di field `profilePictureUrl` (multipart)
+                    profilePictureUrl: renamedAvatarFile || undefined,
                 };
 
                 await updateProfile(payload);
@@ -347,8 +366,11 @@ export const Setting = () => {
                         <div className="mt-1 w-full rounded-2xl border border-border bg-white px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-orange-400">
                             <div className="flex flex-wrap items-center gap-2">
                                 {preferences.map((pref, idx) => (
-                                    <span key={`${pref}-${idx}`} className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-1 text-xs font-semibold text-black">
-                                        {pref}
+                                    <span
+                                        key={`${typeof pref === "object" ? pref.name : pref}-${idx}`}
+                                        className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-1 text-xs font-semibold text-black"
+                                    >
+                                        {typeof pref === "object" ? pref.name : pref}
                                         <button
                                             type="button"
                                             onClick={() => removePreferenceToken(idx)}
@@ -365,7 +387,7 @@ export const Setting = () => {
                                     onChange={(e) => setPrefInput(e.target.value)}
                                     onBlur={addPreferenceToken}
                                     onKeyDown={(e) => {
-                                        if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+                                        if (e.key === "Enter") {
                                             e.preventDefault();
                                             addPreferenceToken();
                                         }
@@ -375,7 +397,7 @@ export const Setting = () => {
                                 />
                             </div>
                         </div>
-                        <p className="mt-1 text-xs text-muted-foreground">Press Enter or Space to create a tag.</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Press Enter to create a tag.</p>
                     </FormField>
 
 

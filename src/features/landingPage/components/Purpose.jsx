@@ -71,7 +71,7 @@ export const Purpose = () => {
 
             <div className="p-8 md:p-12 lg:p-16">
                 <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="rounded-t-2xl overflow-hidden bg-[var(--color-primary)]">
+                    <div className="rounded-t-2xl overflow-hidden bg-[var(--color-primary)] flex flex-col h-full">
                         <div className="relative p-6 md:p-8">
                             <div className=" rounded-lg overflow-hidden h-[300px] md:h-[350px] flex items-center justify-center">
                                 <img
@@ -81,16 +81,21 @@ export const Purpose = () => {
                                 />
                             </div>
                         </div>
-                        <div className="p-6 md:px-8 pt-0 mb-14">
-                            <h2 className="text-3xl font-extrabold text-black mb-3">
-                                Find Connection
-                            </h2>
-                            <p className="text-base text-gray-800">
-                                Join dinners, meetups, and events. Matched by your interests, personality, and city.
-                            </p>
+                        <div className="p-6 md:px-8 pt-0 mb-14 flex-1 flex flex-col justify-between">
+                            <div>
+                                <h2 className="text-3xl font-extrabold text-black mb-3">
+                                    Find Connection
+                                </h2>
+                                <p className="text-base text-gray-800">
+                                    Join dinners, meetups, and events. Matched by your interests, personality, and city.
+                                </p>
+                            </div>
+                            <button onClick={() => navigate("/profiling/questioner")} className="bg-black hover:cursor-pointer text-white font-semibold py-3 px-8 rounded-lg hover:bg-gray-800 cursor-pointer transition duration-300 w-fit mt-6">
+                                Find Now
+                            </button>
                         </div>
                     </div>
-                    <div className="rounded-t-2xl shadow-xl overflow-hidden bg-[var(--color-secondary)]">
+                    <div className="rounded-t-2xl shadow-xl overflow-hidden bg-[var(--color-secondary)] flex flex-col h-full">
                         <div className="relative p-6 md:p-8">
                             <div className="bg-white rounded-lg overflow-hidden h-[300px] md:h-[350px] flex items-center justify-center shadow-lg">
                                 <img
@@ -100,13 +105,19 @@ export const Purpose = () => {
                                 />
                             </div>
                         </div>
-                        <div className="p-6 md:px-8 pt-0  mb-14">
-                            <h2 className="text-3xl font-extrabold text-black mb-3">
-                                Host It
-                            </h2>
-                            <p className="text-base text-gray-800">
-                                Create your own gathering with one prompt. AI builds the event for you details, setup, and suggested participants.
-                            </p>
+                        <div className="p-6 md:px-8 pt-0 mb-14 flex-1 flex flex-col justify-between">
+                            <div>
+                                <h2 className="text-3xl font-extrabold text-black mb-3">
+                                    Host It
+                                </h2>
+                                <p className="text-base text-gray-800">
+                                    Create your own gathering with one prompt. AI builds the event for you details, setup, and suggested participants.
+                                </p>
+                            </div>
+
+                            <button onClick={() => navigate("/hosting")} className="bg-black hover:cursor-pointer text-white font-semibold py-3 px-8 rounded-lg hover:bg-gray-800 cursor-pointer transition duration-300 w-fit mt-6">
+                                Host Now
+                            </button>
                         </div>
                     </div>
                 </div>

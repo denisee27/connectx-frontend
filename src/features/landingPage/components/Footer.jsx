@@ -16,11 +16,11 @@ export const Footer = () => {
                     <p className="text-lg text-center text-black mb-4">
                         Join thousands of people discovering meaningful friendships and experiences in their city
                     </p>
-                    <div className="flex gap-4 mb-8">
+                    {/* <div className="flex gap-4 mb-8">
                         <button className="bg-black text-white font-semibold px-6 py-3 rounded-full shadow hover:bg-gray-800 transition">Get Started Free</button>
                         <button className="bg-white text-black font-semibold px-6 py-3 rounded-full border border-black hover:bg-gray-100 transition">Learn More</button>
-                    </div>
-                    <hr className="w-full border-t border-black/30 mb-8" />
+                    </div> */}
+                    {/* <hr className="w-full border-t border-black/30 mb-8" /> */}
                     <div className="flex w-full justify-center gap-12 text-center">
                         <div>
                             <div className="text-2xl font-bold text-black">50K+</div>
@@ -91,12 +91,10 @@ export const Footer = () => {
                         </button>
 
                         <div className="flex items-center gap-4 sm:gap-4">
-                            <button className="md:flex-0 flex-2 rounded-xl px-3 py-3 border border-black text-black font-semibold items-center gap-1 shadow-md hover:bg-white cursor-pointer transition-all duration-150 text-sm">
-                                <div className="flex align-middle gap-1">
-                                    <Globe className="mx-auto" />
-                                </div>
+                            <button onClick={() => navigate("/login")} className="rounded-xl px-4 py-2 bg-transparent border-2 border-black text-black font-semibold hover:bg-gray-800 hover:text-white cursor-pointer transition-all duration-150 text-sm" >
+                                Sign In
                             </button>
-                            <button className="rounded-xl md:flex flex-2 px-4 py-3 border border-black text-black font-semibold hover:bg-black hover:text-white cursor-pointer transition-all duration-150 text-sm" onClick={() => navigate("/login")} >
+                            <button className="rounded-xl px-4 py-2 bg-black text-white font-semibold hover:bg-gray-800 cursor-pointer transition-all duration-150 text-sm" onClick={() => handleStartnow()} >
                                 Start Now
                             </button>
                         </div>

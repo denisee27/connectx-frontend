@@ -1,5 +1,5 @@
 import React from "react";
-import { MapPin, Briefcase, CalendarDays, Zap, Users, Brain, Mail, Globe, User, Mars, Venus, Sparkles } from "lucide-react";
+import { MapPin, Briefcase, CalendarDays, Zap, Users, Brain, Mail, Globe, User, Mars, Venus, Sparkles, Heart } from "lucide-react";
 import { useProfile } from "../hooks/useProfile";
 import Markdown from "react-markdown";
 import { FadeIn } from "../../../shared/components/ui/FadeIn.jsx";
@@ -82,6 +82,27 @@ export const Profile = () => {
                                             <StatCard key={s.label} icon={s.icon} label={s.label} value={s.value} />
                                         ))}
                                     </div>
+
+                                    {/* Preferences / Interests */}
+                                    {profile?.preferences?.length > 0 && (
+                                        <div className="mt-6 pt-6 border-primary/10">
+                                            <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2 justify-center sm:justify-start">
+                                                <Heart size={16} className="text-rose-500" />
+                                                Interests & Hobbies
+                                            </h3>
+                                            <div className="flex flex-wrap gap-2 justify-center sm:justify-start sm:max-w-xl">
+                                                {profile?.preferences.map((pref) => (
+                                                    <span
+                                                        key={pref.id}
+                                                        className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium bg-white/80 hover:bg-white text-foreground border border-primary/10 shadow-sm transition-all hover:scale-105 cursor-default"
+                                                    >
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-primary/60"></span>
+                                                        {pref.name}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </section>

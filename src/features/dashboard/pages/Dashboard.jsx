@@ -68,6 +68,7 @@ function DashboardContent({ initial }) {
         slug: item.slug,
         date: item.datetime,
         banner: item.banner,
+        placeName: item.placeName,
         dateISO: item.datetime,
         meta: `${item.category?.name || "General"} • ${item.city?.name || "City"}`,
       });
@@ -132,6 +133,7 @@ function DashboardContent({ initial }) {
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {popularData[popularActive]?.map((e, i) => (
                   <div key={i} onClick={() => window.open(`/home/event/${e.slug}`)}>
+                    {console.log(e)}
                     <EventCard {...e} />
                   </div>
                 ))}

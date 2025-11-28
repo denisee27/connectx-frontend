@@ -49,7 +49,13 @@ export const useAuthStore = create((set, get) => ({
 
   logout: async (reason = null, showModal = false) => {
     try {
-      await logoutUser();
+      const token = get().accessToken;
+      // Hanya panggil API logout jika ada access token
+      if (token) {
+        await logoutUser();
+      } else {
+        logger.info("Skipping logout API call: no access token present");
+      }
     } catch (exception) {
       logger.warn("Logout API call failed, clearing client session anyway", { exception });
     } finally {

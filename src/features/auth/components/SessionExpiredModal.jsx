@@ -106,10 +106,10 @@ const SessionExpiredModal = () => {
             <p className="text-center text-gray-600 mb-6">{reason}</p>
 
             {/* Additional info */}
-            <div className="mb-6 rounded-lg bg-blue-50 p-4 border border-blue-100">
+            <div className="mb-6 rounded-lg bg-orange-50 p-4 border border-primary">
               <div className="flex items-start gap-3">
                 <svg
-                  className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0"
+                  className="h-5 w-5 text-primary mt-0.5 flex-shrink-0"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -120,10 +120,10 @@ const SessionExpiredModal = () => {
                   />
                 </svg>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-blue-900">
+                  <p className="text-sm font-medium text-secondary">
                     Please log in again to continue
                   </p>
-                  <p className="mt-1 text-xs text-blue-700">
+                  <p className="mt-1 text-xs text-primary">
                     Your work has been saved. You can continue where you left off after logging in.
                   </p>
                 </div>
@@ -135,7 +135,7 @@ const SessionExpiredModal = () => {
               <button
                 id="session-expired-ok-btn"
                 onClick={handleOk}
-                className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+                className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-secondary cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
                 autoFocus
               >
                 Go to Login

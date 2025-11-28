@@ -31,7 +31,6 @@ export const transformResponse = (response) => {
     // If just data object without wrapper
     return response.data;
   }
-  console.log("response.123", response.data);
   // Fallback: return as-is
   return response.data;
 };
@@ -53,15 +52,12 @@ export const transformResponse = (response) => {
  */
 export const transformPaginatedResponse = (response) => {
   const data = response.data;
-  console.log("response.data", data);
 
   if (!data || typeof data !== "object") {
     logger.warn("Invalid paginated response format", { data });
     return { data: [], meta: null };
   }
 
-  // Standard format with meta
-  console.log(data)
   if (data.data) {
     const items = Array.isArray(data.data) ? data.data : [];
     logger.info("items", items);

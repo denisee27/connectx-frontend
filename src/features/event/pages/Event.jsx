@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
-import { MapPin, CalendarDays, Users, Tag, X, CheckCircle2 } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
+import { MapPin, CalendarDays, Users, Tag, X, CheckCircle2, ExternalLink, Bookmark } from "lucide-react";
 import { useEvent } from "../hooks/useEvent";
 import { format } from "date-fns";
 import SkeletonLoader from "../../../shared/components/ui/SkeletonLoader";
@@ -8,7 +8,7 @@ import { FadeIn } from "../../../shared/components/ui/FadeIn";
 import { useAuth } from "../../../core/auth/useAuth";
 import LoginModal from "../../auth/components/LoginModal";
 import { env } from "../../../core/config/env";
-import { useCreatePayment } from "../hooks/usePayment";
+import { useCreatePayment, useStatusPayment } from "../hooks/usePayment";
 
 function Modal({ open, onClose, children }) {
   React.useEffect(() => {
@@ -49,9 +49,8 @@ function Badge({ type }) {
   const label = type === "meetup" ? "Meetup" : type === "dinner" ? "Dinner" : "Event";
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-        map[type] || map.event
-      }`}
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${map[type] || map.event
+        }`}
     >
       {label}
     </span>
@@ -62,11 +61,14 @@ export default function Event() {
   const { slug } = useParams();
   const { data: event, isPending } = useEvent(slug);
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [latestOrderId, setLatestOrderId] = useState(null);
+  const { data: polledPaymentStatus } = useStatusPayment(latestOrderId);
   const registrationFee = useMemo(() => {
-    const rawPrice = event?.price ?? event?.fee ?? event?.registrationFee ?? 50000;
+    const rawPrice = event?.price ?? event?.fee ?? event?.registrationFee ?? 5000;
     const numericPrice = Number(rawPrice);
     if (Number.isNaN(numericPrice) || !Number.isFinite(numericPrice)) {
-      return 50000;
+      return 5000;
     }
     return Math.max(0, Math.round(numericPrice));
   }, [event]);
@@ -89,14 +91,30 @@ export default function Event() {
   };
 
   const handlePaymentSuccess = (paymentData) => {
+    console.log("paymentData received", paymentData);
+    if (paymentData?.orderId) {
+      setLatestOrderId(paymentData.orderId);
+      console.log("orderId set for polling:", paymentData.orderId);
+    }
     setPaymentOpen(false);
     setPaymentResult(paymentData || null);
     setSuccessOpen(true);
   };
 
+  // Navigate when polled status becomes ACTIVE (runs every 5s via hook)
+  React.useEffect(() => {
+    const status = polledPaymentStatus?.data?.status;
+    if (status) {
+      console.log("Polled payment status:", status);
+    }
+    if (status && String(status).toUpperCase() === "SETTLED") {
+      navigate("/home/schedule");
+    }
+  }, [polledPaymentStatus, navigate]);
+
   return (
     <>
-      <div className="min-h-screen bg-card">
+      <div className="min-h-screen bg-card pb-12">
         {isPending ? (
           <div className="mx-auto w-full max-w-4xl">
             <SkeletonLoader className="h-56 w-full rounded-b-2xl sm:h-72 md:h-80" />
@@ -118,11 +136,20 @@ export default function Event() {
           <FadeIn show={!isPending}>
             <div className="mx-auto w-full max-w-4xl">
               {event?.banner && (
-                <img
-                  src={env.VITE_API_BASE_URL + "/rooms/image/" + event?.banner}
-                  alt={event?.title}
-                  className="h-56 w-full rounded-b-2xl object-cover sm:h-72 md:h-80"
-                />
+                <div className="relative">
+                  <img
+                    src={env.VITE_API_BASE_URL + "/rooms/image/" + event?.banner}
+                    alt={event?.title}
+                    className="h-56 w-full rounded-b-2xl object-cover sm:h-72 md:h-80"
+                  />
+                  {event?.type && (
+                    <div className="absolute top-4 right-4 z-10">
+                      <span className="inline-flex items-center rounded-full bg-orange-500 px-4 py-1.5 text-sm font-bold text-white shadow-md capitalize">
+                        {event.type}
+                      </span>
+                    </div>
+                  )}
+                </div>
               )}
               <div className="px-4 py-6 sm:px-6 md:px-8">
                 <div className="flex items-start justify-between">
@@ -131,27 +158,185 @@ export default function Event() {
                       {event?.title}
                     </h1>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin size={16} /> {event?.address}
-                      </span>
+                      <a
+                        href={event?.gmaps}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-1 hover:text-primary transition-colors ${!event?.gmaps && "pointer-events-none"
+                          }`}
+                      >
+                        <MapPin size={16} />
+                        <span>
+                          {event?.address}
+                          {event?.city?.name && `, ${event.city.name}`}
+                        </span>
+                        {event?.gmaps && <ExternalLink size={12} />}
+                      </a>
+
                       <span className="inline-flex items-center gap-1">
                         <CalendarDays size={16} />
                         {event?.datetime && format(new Date(event.datetime), "dd MMMM yyyy, HH:mm")}
                       </span>
+
                       {event?.maxParticipant && (
                         <span className="inline-flex items-center gap-1">
                           <Users size={16} /> Capacity {event?.maxParticipant}
                         </span>
                       )}
-                      <span className="inline-flex items-center gap-1">
+
+                      {/* <span className="inline-flex items-center gap-1">
                         <Tag size={16} /> <Badge type={event?.type} />
-                      </span>
+                      </span> */}
+
+                      {event?.category?.name && (
+                        <span className="inline-flex items-center gap-1">
+                          <Bookmark size={16} /> {event.category.name}
+                        </span>
+                      )}
                     </div>
+
+                    {/* Hosted By Section */}
+                    {event?.createdBy && (
+                      <div className="mt-6 flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/40 max-w-md hover:bg-muted/50 transition-colors">
+                        <img
+                          src={
+                            event.createdBy.profilePictureUrl
+                              ? `${env.VITE_API_BASE_URL}/rooms/image/${event.createdBy.profilePictureUrl}`
+                              : `https://ui-avatars.com/api/?name=${event.createdBy.name}&background=random`
+                          }
+                          alt={event.createdBy.name}
+                          className="w-10 h-10 rounded-full object-cover border border-border"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-0.5">
+                            Hosted by
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-foreground truncate">
+                              {event.createdBy.name}
+                            </span>
+                            {event.createdBy.mbti && (
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${["INTJ", "ENTJ", "INTP", "ENTP"].includes(event.createdBy.mbti) ? "bg-purple-100 text-purple-700 border-purple-200" :
+                                ["INFJ", "ENFJ", "INFP", "ENFP"].includes(event.createdBy.mbti) ? "bg-green-100 text-green-700 border-green-200" :
+                                  ["ISTJ", "ESTJ", "ISFJ", "ESFJ"].includes(event.createdBy.mbti) ? "bg-blue-100 text-blue-700 border-blue-200" :
+                                    "bg-orange-100 text-orange-700 border-orange-200"
+                                }`}>
+                                {event.createdBy.mbti}
+                              </span>
+                            )}
+                          </div>
+                          {event.createdBy.mbtiDesc && (
+                            <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                              {event.createdBy.mbtiDesc}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <p className="mt-6 max-w-3xl text-base leading-relaxed text-foreground/80">
                   {event?.description}
                 </p>
+
+                {/* Attendees Section */}
+                {event?.participants?.length > 0 && (
+                  <div className="mt-10 border-t border-border pt-8">
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                        <Users className="w-6 h-6 text-primary" />
+                        Attendees
+                        <span className="text-muted-foreground font-medium text-base">
+                          ({event.participants.length} going)
+                        </span>
+                      </h2>
+                    </div>
+
+                    {/* Facepile */}
+                    <div className="flex items-center -space-x-3 mb-8 overflow-visible">
+                      {event.participants.slice(0, 8).map((p, i) => (
+                        <div key={p.id} className="group relative z-0 hover:z-10 transition-all duration-200 hover:scale-110">
+                          <img
+                            src={
+                              p.user.profilePictureUrl
+                                ? `${env.VITE_API_BASE_URL}/rooms/image/${p.user.profilePictureUrl}`
+                                : `https://ui-avatars.com/api/?name=${p.user.name}&background=random`
+                            }
+                            alt={p.user.name}
+                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-card object-cover shadow-sm cursor-pointer"
+                          />
+
+                          {/* Tooltip */}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 bg-popover text-popover-foreground text-sm rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none border border-border scale-95 group-hover:scale-100 origin-bottom">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-bold truncate pr-2">{p.user.name}</span>
+                              {p.user.mbti && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/10 text-primary border border-primary/20">
+                                  {p.user.mbti}
+                                </span>
+                              )}
+                            </div>
+                            {p.user.mbtiDesc && (
+                              <p className="text-xs text-muted-foreground leading-relaxed">
+                                {p.user.mbtiDesc}
+                              </p>
+                            )}
+                            {/* Arrow */}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-popover drop-shadow-sm"></div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {event.participants.length > 8 && (
+                        <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-card bg-muted text-xs font-bold text-muted-foreground z-0">
+                          +{event.participants.length - 8}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Detailed List (Max 3) */}
+                    <div className="space-y-4">
+                      {event.participants.slice(0, 3).map((p) => (
+                        <div
+                          key={p.id}
+                          className="flex items-start gap-4 p-4 rounded-2xl border border-border bg-card/50 hover:bg-card hover:shadow-md transition-all duration-300 group"
+                        >
+                          <div className="relative shrink-0">
+                            <img
+                              src={
+                                p.user.profilePictureUrl
+                                  ? `${env.VITE_API_BASE_URL}/rooms/image/${p.user.profilePictureUrl}`
+                                  : `https://ui-avatars.com/api/?name=${p.user.name}&background=random`
+                              }
+                              alt={p.user.name}
+                              className="w-12 h-12 rounded-full object-cover border border-border"
+                            />
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-semibold text-foreground truncate">
+                                {p.user.name}
+                              </h3>
+                              {p.user.mbti && (
+                                <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold tracking-wide uppercase border ${["INTJ", "ENTJ", "INTP", "ENTP"].includes(p.user.mbti) ? "bg-purple-100 text-purple-700 border-purple-200" :
+                                  ["INFJ", "ENFJ", "INFP", "ENFP"].includes(p.user.mbti) ? "bg-green-100 text-green-700 border-green-200" :
+                                    ["ISTJ", "ESTJ", "ISFJ", "ESFJ"].includes(p.user.mbti) ? "bg-blue-100 text-blue-700 border-blue-200" :
+                                      "bg-orange-100 text-orange-700 border-orange-200"
+                                  }`}>
+                                  {p.user.mbti}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground line-clamp-2 italic group-hover:text-foreground/80 transition-colors">
+                              {p.user.mbtiDesc || "No personality description available."}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </FadeIn>
@@ -203,7 +388,12 @@ export default function Event() {
 function PaymentModal({ isOpen, onClose, onSuccess, event, price }) {
   const { user } = useAuth();
   const { mutateAsync: createPayment, isPending } = useCreatePayment();
+  const [orderId, setOrderId] = useState();
+
   const [payError, setPayError] = useState("");
+  const vatBase = 5000;
+  const vatRate = 0.10;
+  const vatAmount = (vatBase * vatRate);
 
   const amount = useMemo(() => {
     const numericPrice = Number(price);
@@ -212,6 +402,7 @@ function PaymentModal({ isOpen, onClose, onSuccess, event, price }) {
     }
     return Math.max(0, Math.round(numericPrice));
   }, [price]);
+  const totalPayable = amount + vatAmount;
 
   const handleClose = () => {
     setPayError("");
@@ -237,67 +428,78 @@ function PaymentModal({ isOpen, onClose, onSuccess, event, price }) {
     setPayError("");
     try {
       const payload = {
-        amount: amount || 1,
+        amount: totalPayable || 1,
         items: [
           {
             id: String(event?._id || event?.id || event?.slug || "event-registration"),
             name: event?.title || "Event Registration",
-            price: amount || 1,
+            price: totalPayable || 1,
             quantity: 1,
           },
         ],
         metadata: {
-          eventId: event?._id || event?.id || event?.slug,
+          eventId: event?.id || event?.slug,
           eventTitle: event?.title,
           eventType: event?.type,
           userId: user?._id || user?.id,
         },
         customer: buildCustomerPayload(),
       };
-
       const response = await createPayment(payload);
       const paymentData = response?.data || response;
-
+      if (!paymentData?.orderId) {
+        throw new Error("Payment failed, please try again.");
+      }
+      console.log('paymentdata', paymentData)
+      setOrderId(paymentData?.orderId);
       if (paymentData?.redirectUrl) {
         window.open(paymentData.redirectUrl, "_blank", "noopener,noreferrer");
       }
 
       onSuccess(paymentData);
     } catch (error) {
-      const message = error?.message || "Pembayaran gagal, silakan coba lagi.";
+      const message = error?.message || "Payment failed, please try again.";
       setPayError(message);
     }
   };
+
+  // Polling moved to Event component via latestOrderId
 
   return (
     <Modal open={isOpen} onClose={handleClose}>
       <div className="px-5 py-6 space-y-4">
         <div>
-          <h3 className="text-xl font-semibold text-card-foreground">Pembayaran</h3>
+          <h3 className="text-xl font-semibold text-card-foreground">Payment</h3>
           <p className="text-sm text-muted-foreground">
-            Kamu akan dialihkan ke Midtrans Snap (sandbox) untuk menyelesaikan pembayaran.
+            You will be redirected to Midtrans to complete your payment.
           </p>
         </div>
 
         <div className="rounded-lg border border-input bg-card p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Acara</span>
+            <span className="text-sm text-muted-foreground">Event</span>
             <span className="text-sm font-semibold text-card-foreground">
               {event?.title || "Event Registration"}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Biaya</span>
+            <span className="text-sm text-muted-foreground">Fee</span>
             <span className="text-lg font-bold text-card-foreground">
               Rp {amount.toLocaleString("id-ID")}
             </span>
           </div>
-          {user && (
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Email</span>
-              <span className="text-sm font-medium text-card-foreground">{user.email}</span>
-            </div>
-          )}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">VAT 10% of Rp {vatBase.toLocaleString("id-ID")}</span>
+            <span className="text-sm font-medium text-card-foreground">
+              Rp {vatAmount.toLocaleString("id-ID")}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Total to Pay</span>
+            <span className="text-lg font-bold text-card-foreground">
+              Rp {totalPayable.toLocaleString("id-ID")}
+            </span>
+          </div>
         </div>
 
         {payError && (
@@ -311,14 +513,14 @@ function PaymentModal({ isOpen, onClose, onSuccess, event, price }) {
             onClick={handleClose}
             className="rounded-lg border border-input px-4 py-2 text-sm text-foreground hover:bg-muted"
           >
-            Tutup
+            Close
           </button>
           <button
             onClick={handleCreatePayment}
             disabled={isPending}
             className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-secondary disabled:opacity-60"
           >
-            {isPending ? "Memproses..." : "Bayar via Midtrans"}
+            {isPending ? "Processing..." : "Payment"}
           </button>
         </div>
       </div>
@@ -333,9 +535,9 @@ function SuccessModal({ isOpen, onClose, payment }) {
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-700">
           <CheckCircle2 size={24} />
         </div>
-        <h3 className="text-xl font-semibold text-card-foreground">Pembayaran Dibuat</h3>
+        <h3 className="text-xl font-semibold text-card-foreground">Payment Created</h3>
         <p className="mt-2 text-sm text-muted-foreground">
-          Pesananmu sudah dibuat di Midtrans. Selesaikan pembayaran di halaman Snap.
+          Your order has been created in Midtrans. Complete your payment on the Snap page.
         </p>
 
         <div className="mt-4 space-y-1 text-sm text-card-foreground">
@@ -351,14 +553,14 @@ function SuccessModal({ isOpen, onClose, payment }) {
               onClick={() => window.open(payment.redirectUrl, "_blank", "noopener,noreferrer")}
               className="rounded-lg border border-input px-5 py-2 text-sm font-semibold text-foreground hover:bg-muted"
             >
-              Buka Halaman Pembayaran
+              Open Payment Page
             </button>
           )}
           <button
             onClick={onClose}
             className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-secondary"
           >
-            Tutup
+            Close
           </button>
         </div>
       </div>

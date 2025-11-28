@@ -40,7 +40,7 @@ export default function VerifyEmailPage() {
                 },
             }
         );
-    }, [verificationToken, verifyEmail]);
+    }, []);
 
     const isPending = status === "pending";
     const isSuccess = status === "success";

@@ -36,7 +36,7 @@ export default function HowItWorks() {
                 <h2 className="text-5xl md:text-6xl font-extrabold text-gray-800 mb-2">
                     How it works
                 </h2>
-                
+
                 <p className="text-lg mb-16">
                     Four simple steps to expand your social circle
                 </p>
@@ -52,7 +52,7 @@ export default function HowItWorks() {
                                 </div>
 
                                 <div className="absolute top-0 right-0 transform translate-Z-1 translate-y-1 w-7 h-7 bg-black rounded-full flex items-center justify-center">
-                                    <span className="text-xs font-bold text-[var(--color-secondary)]">{step.number}</span>
+                                    <span className="text-xs font-bold text-white">{step.number}</span>
                                 </div>
                             </div>
 

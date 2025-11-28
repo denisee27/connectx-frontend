@@ -1,6 +1,8 @@
 import { Calendar, MapPin, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useFind } from '../hooks/useFind';
+import { env } from '../../../core/config/env';
+import { format } from 'date-fns';
 
 export default function Event() {
     const { data: findData = [], isLoading, isError } = useFind();
@@ -24,12 +26,12 @@ export default function Event() {
                         >
                             <div className="relative h-48 w-full overflow-hidden">
                                 <img
-                                    src={event?.banner}
+                                    src={env.VITE_API_BASE_URL + "/rooms/image/" + event?.banner}
                                     alt={event?.title}
                                     className="w-full h-full object-cover"
                                 />
                                 <span
-                                    className={`absolute top-3 right-3 text-xs font-semibold px-3 py-1 rounded-full text-black bg-[var(--color-primary)]`}>
+                                    className={`absolute top-3 right-3 text-xs font-semibold px-3 py-1 rounded-full text-white bg-[var(--color-primary)]`}>
                                     {event?.category?.name}
                                 </span>
                             </div>
@@ -42,7 +44,7 @@ export default function Event() {
 
                                     <div className="flex items-center text-sm text-gray-700 mb-1">
                                         <span className="mr-2 text-sm"><Calendar size={15} /></span>
-                                        <span>{event?.datetime}</span>
+                                        <span>{format(event?.datetime, 'dd MMM yyyy, HH:mm')}</span>
                                     </div>
 
                                     <div className="flex items-center text-sm text-gray-700 mb-4">
@@ -50,10 +52,6 @@ export default function Event() {
                                         <span>{event?.address}</span>
                                     </div>
 
-                                    {/* <div className="flex items-center text-sm text-gray-700 mb-4">
-                                        <span className="mr-2 text-sm"><Users size={15} /></span>
-                                        <span>{event?._count?.participants} attending</span>
-                                    </div> */}
                                 </div>
 
                                 <button

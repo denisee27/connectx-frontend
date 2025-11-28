@@ -127,7 +127,7 @@ export default function FormProfile() {
 
     const confirmYes = () => {
         sessionStorage.setItem("profilingSkipRefreshModal", "1");
-        resetProfilingAll(reset);
+        // resetProfilingAll(reset);
         refreshModal.close();
         navigate("/profiling/questioner", { replace: true });
     };
@@ -335,10 +335,10 @@ export default function FormProfile() {
                                 </div>
                                 <div className="px-6 py-6">
                                     <h3 id="profiling-refresh-title" className="text-center text-lg font-semibold text-gray-900 mb-3">
-                                        Konfirmasi Refresh
+                                        Refresh Profile
                                     </h3>
                                     <p className="text-center text-sm text-gray-600">
-                                        Apakah Anda yakin ingin memulai ulang? Semua jawaban akan direset.
+                                        Are you sure you want to refresh your profile? All your answers will be reset.
                                     </p>
                                     <div className="mt-6 flex items-center justify-center gap-3">
                                         <button
@@ -359,21 +359,6 @@ export default function FormProfile() {
                             </div>
                         </div>
                     </div>
-                    // <div>
-                    //     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" aria-hidden="true" />
-                    //     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    //         <div className="relative w-full max-w-md overflow-hidden rounded-xl bg-white shadow-2xl">
-                    //             <div className="p-6">
-                    //                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Konfirmasi Refresh</h3>
-                    //                 <p className="text-sm text-gray-600">Apakah Anda yakin ingin memulai ulang? Semua jawaban akan direset.</p>
-                    //                 <div className="mt-6 flex justify-end gap-3">
-                    //                     <button onClick={() => refreshModal.close()} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700">Tidak, tetap</button>
-                    //                     <button onClick={() => {  }} className="px-4 py-2 rounded-lg bg-orange-500 text-white">Ya, mulai ulang</button>
-                    //                 </div>
-                    //             </div>
-                    //         </div>
-                    //     </div>
-                    // </div>
                 )}
             </div>
         </div>

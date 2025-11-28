@@ -5,18 +5,8 @@ import api from "../../../core/api/index.js";
 import { useCategory } from "../hooks/useCategory.js";
 import SkeletonLoader from "../../../shared/components/ui/SkeletonLoader.jsx";
 import { FadeIn } from "../../../shared/components/ui/FadeIn.jsx";
+import { env } from "../../../core/config/env.js";
 
-// Utility: formatters
-const formatDateLabel = (iso) => {
-    const d = new Date(iso);
-    const day = d.toLocaleDateString("id-ID", { day: "2-digit" });
-    const monthShort = d.toLocaleDateString("id-ID", { month: "short" });
-    const weekday = d.toLocaleDateString("id-ID", { weekday: "long" });
-    const time = d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-    return { day, monthShort, weekday, time };
-};
-
-const parseTime = (iso) => new Date(iso).getTime();
 const labelDay = (iso) => {
     const d = new Date(iso);
     const monthShort = d.toLocaleDateString("en-US", { month: "short" });
@@ -25,7 +15,7 @@ const labelDay = (iso) => {
     return { dayLabel: `${monthShort} ${day}`, dayName: weekday, time: d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) };
 };
 
-// Header Section (simplified)
+
 function HeaderSection({ title, description, iconUrl }) {
     return (
         <section className="relative rounded-3xl bg-white text-foreground shadow-sm border border-border overflow-hidden">
@@ -68,7 +58,7 @@ const EventCard = ({ time, title, location, guests, thumbnail, onClick }) => (
         {/* Thumbnail */}
         <div className="shrink-0">
             <img
-                src={thumbnail}
+                src={env.VITE_API_BASE_URL + '/rooms/image/' + thumbnail}
                 alt="event thumbnail"
                 className="h-24 w-24 md:h-36 md:w-36 rounded-xl object-cover"
                 loading="lazy"
@@ -81,7 +71,7 @@ export const DetailCategory = ({ category: categoryProp, events: eventsProp, fet
     const navigate = useNavigate();
     const { slug } = useParams();
     const { data: categoryData, isPending: isPendingCategory } = useCategory(slug);
-
+    console.log('categoryData', categoryData)
     const [category, setCategory] = useState(() => (
         categoryProp || {
             slug: slug || "tech",
@@ -95,48 +85,6 @@ export const DetailCategory = ({ category: categoryProp, events: eventsProp, fet
     const [events, setEvents] = useState(() => eventsProp || []);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-
-    // Simplified: no filters or pagination
-
-    // Fallback sample data if none passed
-    const sample = useMemo(
-        () => [
-            {
-                id: 101,
-                title: "Nail The Interview - Bedah CV, Portfolio dan Simulation",
-                dateISO: "2025-11-15T10:00:00",
-                city: "Yogyakarta",
-                thumbnail:
-                    "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?q=80&w=640&auto=format&fit=crop",
-                guests: 0,
-                price: 0,
-                popularity: 80,
-            },
-            {
-                id: 102,
-                title: "Career Launchpad - CV, Portfolio & Simulation Workshop",
-                dateISO: "2025-11-15T17:00:00",
-                city: "Yogyakarta",
-                thumbnail:
-                    "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=640&auto=format&fit=crop",
-                guests: 0,
-                price: 50000,
-                popularity: 72,
-            },
-            {
-                id: 103,
-                title: "Community Coding Meetup: Build & Share",
-                dateISO: "2025-11-16T14:00:00",
-                city: "Jakarta",
-                thumbnail:
-                    "https://images.unsplash.com/photo-1517433456452-f9633a875f6f?q=80&w=640&auto=format&fit=crop",
-                guests: 18,
-                price: 0,
-                popularity: 88,
-            },
-        ],
-        []
-    );
 
     // Fetch data
     useEffect(() => {
@@ -158,9 +106,8 @@ export const DetailCategory = ({ category: categoryProp, events: eventsProp, fet
                             retry: false,
                         });
                         const data = res?.data || [];
-                        if (active) setEvents(data.length ? data : sample);
+                        if (active) setEvents(data);
                     } catch (_) {
-                        if (active) setEvents(sample);
                     }
                 }
             } catch (e) {
@@ -248,15 +195,18 @@ export const DetailCategory = ({ category: categoryProp, events: eventsProp, fet
                                                     {/* 3. Cards: below date on mobile, right column on desktop */}
                                                     <div className="col-start-2 row-start-2 md:col-start-3 md:row-start-1 space-y-6">
                                                         {day.items.map((ev) => (
-                                                            <EventCard
-                                                                key={`${day.dayLabel}-${ev.id}`}
-                                                                time={ev.time}
-                                                                title={ev.title}
-                                                                location={ev?.city?.name}
-                                                                guests={typeof ev._count.participants === "number" ? (ev._count.participants === 0 ? "No guests" : `${ev._count.participants} guests`) : ev._count.participants}
-                                                                thumbnail={ev.banner}
-                                                                onClick={() => onDetail(ev.slug)}
-                                                            />
+                                                            <>
+                                                                {console.log('ev', ev)}
+                                                                <EventCard
+                                                                    key={`${day.dayLabel}-${ev.id}`}
+                                                                    time={ev.time}
+                                                                    title={ev.title}
+                                                                    location={ev?.city?.name}
+                                                                    guests={typeof ev._count.participants === "number" ? (ev._count.participants === 0 ? "No guests" : `${ev._count.participants} guests`) : ev._count.participants}
+                                                                    thumbnail={ev.banner}
+                                                                    onClick={() => onDetail(ev.slug)}
+                                                                />
+                                                            </>
                                                         ))}
                                                     </div>
                                                 </div>

@@ -3,8 +3,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useProfilling } from "../hooks/useProfiling";
 import { useAuthStore } from "../../auth/stores/authStore";
 import { buildProfilingPayload } from "../utils/payload";
-import { resetProfilingAll } from "../utils/reset";
 import { Calendar, MapPin } from "lucide-react";
+import { env } from "../../../core/config/env";
+import { format } from "date-fns";
 
 function Loading() {
     return (
@@ -28,7 +29,7 @@ function Loading() {
     );
 }
 
-function EventCard({ slug, banner, title, venue, category, city, datetime, onDetail }) {
+function EventCard({ slug, banner, title, placeName, category, city, datetime, onDetail }) {
     return (
         <div
             key={slug}
@@ -36,30 +37,30 @@ function EventCard({ slug, banner, title, venue, category, city, datetime, onDet
         >
             <div className="relative h-48 w-full overflow-hidden">
                 <img
-                    src={banner}
+                    src={env.VITE_API_BASE_URL + '/rooms/image/' + banner}
                     alt={title}
                     className="w-full h-full object-cover"
                 />
                 <span
-                    className={`absolute top-3 right-3 text-xs font-semibold px-3 py-1 rounded-full text-black bg-[var(--color-primary)]`}>
+                    className={`absolute top-3 right-3 text-xs font-semibold px-3 py-1 rounded-full text-white bg-[var(--color-primary)]`}>
                     {category?.name}
                 </span>
             </div>
 
             <div className="p-4 flex flex-col flex-grow">
                 <div className="flex-grow">
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 min-h-[3.5rem] [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical] overflow-hidden">
+                    <h3 className="text-base font-bold text-gray-900 mb-3 min-h-[2.5rem] [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical] overflow-hidden">
                         {title}
                     </h3>
 
                     <div className="flex items-center text-sm text-gray-700 mb-1">
                         <span className="mr-2 text-sm"><Calendar size={15} /></span>
-                        <span>{datetime}</span>
+                        <span>{format(new Date(datetime), "dd MMMM yyyy, HH:mm")}</span>
                     </div>
 
                     <div className="flex items-center text-sm text-gray-700 mb-4">
                         <span className="mr-2 text-sm"><MapPin size={15} /></span>
-                        <span>{venue}, {city?.name}</span>
+                        <span>{placeName}, {city?.name}</span>
                     </div>
                 </div>
 
@@ -110,25 +111,12 @@ export default function Suggestion() {
                 throw new Error("Jawaban quiz tidak lengkap.");
             }
 
-            // const today = new Date();
-            // const birthDate = new Date(profileData.bornDate);
-            // let age = today.getFullYear() - birthDate.getFullYear();
-            // const m = today.getMonth() - birthDate.getMonth();
-            // if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            //     age--;
-            // }
-
             const payload = buildProfilingPayload({ ...profileData }, answers);
             payload.preferences = preferences;
             payload.meetUpPreference = meetUp;
-
             const response = await postProfiling({ data: payload });
-            // console.log('res:', response)
-            // console.log('response.accessToken', response.data.accessToken)
-            // setAuth({ user: null, accessToken: response.data.accessToken });
             setSuggestedRooms(response.data.rooms);
 
-            resetProfilingAll(() => { });
         } catch (e) {
             const message = e?.response?.data?.message || e?.message || "Gagal mengirim data";
             setError(message);
