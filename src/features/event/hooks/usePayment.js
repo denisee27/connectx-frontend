@@ -17,7 +17,7 @@ export const useStatusPayment = (orderId) => {
     queryKey: ["statusPayment", orderId],
     queryFn: () => getPaymentStatus(orderId),
     enabled: !!orderId,
-    refetchInterval: 5000,
+    refetchInterval: 4000,
     refetchIntervalInBackground: true,
     showSuccessToast: false,
     showErrorToast: false,

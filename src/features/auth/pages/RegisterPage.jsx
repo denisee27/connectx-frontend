@@ -2,13 +2,57 @@
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { z } from "zod";
 import { useCities, useCountries } from "../../profiling/hooks/useProfiling";
 import { useRegister } from "../hooks/useRegister";
 import logger from "../../../core/utils/logger";
+
+function SuccessModal({ isOpen, onDone }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl animate-in fade-in zoom-in duration-300">
+        <div className="text-center">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
+            <svg
+              className="h-10 w-10 text-green-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+          <h3 className="mb-4 text-2xl font-bold text-gray-900">
+            Registration Successful!
+          </h3>
+          <p className="mb-8 text-gray-600 text-lg leading-relaxed">
+            Please check your email to verify your account.
+            <br />
+            <span className="text-sm text-gray-500 italic block mt-2">
+              (Don't forget to check your spam folder!)
+            </span>
+          </p>
+          <button
+            onClick={onDone}
+            className="w-full rounded-xl bg-primary py-3.5 font-semibold text-white transition-all hover:bg-primary/90 hover:shadow-lg transform active:scale-95"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const registrationSchema = z
   .object({
@@ -34,9 +78,11 @@ const registrationSchema = z
 export default function RegisterPage() {
   const [serverError, setServerError] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const { data: countries, isLoading: isLoadingCountries, isError: isErrorCountries } = useCountries();
   const { data: cities, isLoading: isLoadingCities, isError: isErrorCities } = useCities(selectedCountry);
   const { mutateAsync: registerUser, isPending } = useRegister();
+  const navigate = useNavigate();
 
   const {
     register,
@@ -54,13 +100,20 @@ export default function RegisterPage() {
     try {
       const { fullName, ...rest } = data;
       await registerUser({ ...rest, name: fullName });
+      setIsSuccessOpen(true);
     } catch (err) {
       setServerError(err?.message || "Registration failed. Please try again.");
     }
   };
 
+  const handleDone = () => {
+    setIsSuccessOpen(false);
+    navigate("/login");
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+      <SuccessModal isOpen={isSuccessOpen} onDone={handleDone} />
       <div className="w-full max-w-2xl">
         <div className="border border-secondary shadow-lg rounded-2xl p-8">
           <h2 className="mb-6 text-center text-3xl font-bold text-gray-800">Create Your Account</h2>
@@ -234,7 +287,7 @@ export default function RegisterPage() {
           <div className="mt-4 text-sm text-center">
             <p>
               Already have an account?{" "}
-              <Link to={"/login"} className="font-medium text-primary-color hover:text-primary-dark-color">
+              <Link to={"/login"} className="font-medium text-primary hover:text-secondary">
                 Login here
               </Link>
             </p>

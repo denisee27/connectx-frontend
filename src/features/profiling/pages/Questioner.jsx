@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useModal } from "../../../core/stores/uiStore";
 import { Loader2, Sparkles, TriangleAlert } from "lucide-react";
 import { useQuestions } from "../hooks/useProfiling";
+import { useAuth } from "../../../core/auth/useAuth";
 
 /**
  * Questioner type rendering and validation rules
@@ -11,6 +12,65 @@ import { useQuestions } from "../hooks/useProfiling";
  * - scale: renders Likert (Sangat Setuju..Tidak Setuju), stores integer 5..1
  * Tipe "single" telah dihapus. Untuk menambah tipe baru: definisikan UI dan validasi.
  */
+
+function Loading({ isComplete }) {
+    const [progress, setProgress] = useState(0);
+
+    useEffect(() => {
+        if (isComplete) {
+            setProgress(100);
+            return;
+        }
+
+        // Slow progress simulation
+        const interval = setInterval(() => {
+            setProgress((prev) => {
+                if (prev >= 90) return prev; // Stall at 90% until complete
+                // Random increment between 1 and 5
+                const increment = Math.floor(Math.random() * 5) + 1;
+                return Math.min(prev + increment, 90);
+            });
+        }, 800);
+
+        return () => clearInterval(interval);
+    }, [isComplete]);
+
+    return (
+        <div className="flex min-h-[300px] items-center justify-center flex-col w-full max-w-md mx-auto">
+            <div className="w-full mb-8">
+                {/* Brand ring animation */}
+                <div className="relative mx-auto mb-8 h-20 w-20">
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-orange-400 via-yellow-300 to-orange-500 opacity-80 animate-spin" style={{ animationDuration: "2s" }}></div>
+                    <div className="absolute inset-2 rounded-full bg-white flex items-center justify-center">
+                        <span className="text-lg font-bold text-orange-500">{progress}%</span>
+                    </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden mb-4">
+                    <div
+                        className="h-full bg-gradient-to-r from-orange-500 to-yellow-400 transition-all duration-500 ease-out rounded-full"
+                        style={{ width: `${progress}%` }}
+                    ></div>
+                </div>
+
+                {/* Status copy */}
+                <div className="text-center space-y-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                        {progress === 100 ? "Questions Ready!" : "Curating questions..."}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                        {progress < 30 && "Analyzing profile context..."}
+                        {progress >= 30 && progress < 60 && "Generating relevant questions..."}
+                        {progress >= 60 && progress < 90 && "Refining questionnaire..."}
+                        {progress >= 90 && progress < 100 && "Finalizing session..."}
+                        {progress === 100 && "Let's begin!"}
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 const LIKERT = [
     { label: "Strongly Agree", value: "Strongly Agree" },       // Sangat Setuju
@@ -36,6 +96,7 @@ export default function Questioner() {
     const navigate = useNavigate();
     const { data: questionsData, isPending: isPendingQuestions, error: questionsError } = useQuestions();
     const questions = useMemo(() => questionsData?.data?.mbti_questions || [], [questionsData]);
+    const { isAuthenticated } = useAuth();
 
     const total = questions.length;
     const [index, setIndex] = useState(0);
@@ -45,6 +106,21 @@ export default function Questioner() {
     const [success, setSuccess] = useState(false);
     const refreshModal = useModal("profilingRefreshConfirm");
     const q = questions[index];
+
+    // State to track if loading animation should still be shown (for 100% completion effect)
+    const [showLoading, setShowLoading] = useState(true);
+
+    useEffect(() => {
+        if (!isPendingQuestions && questions.length > 0) {
+            // Give a small delay to show 100% before hiding loading
+            const timer = setTimeout(() => {
+                setShowLoading(false);
+            }, 800);
+            return () => clearTimeout(timer);
+        } else if (questionsError) {
+            setShowLoading(false);
+        }
+    }, [isPendingQuestions, questions, questionsError]);
 
     useEffect(() => {
         if (total > 0) {
@@ -105,15 +181,25 @@ export default function Questioner() {
         setSuccess(false);
         try {
             const answered = (answers || []).filter(Boolean);
+
+            // Validation: Ensure all 10 questions are answered
+            if (answered.length !== 10) {
+                throw new Error(`Please answer all 10 questions. You have answered ${answered.length}.`);
+            }
+
             if (answered.length !== total) { // Use total instead of QUESTIONS.length
-                throw new Error("Mohon jawab semua pertanyaan dulu.");
+                throw new Error("Please fill in all questions.");
             }
             localStorage.setItem("profilingAnswers", JSON.stringify(answered));
             try { localStorage.setItem("profilingCurrentIndex", String(index)); } catch (_) { }
             setSuccess(true);
-            navigate("/profiling/preference");
+            if (!isAuthenticated) {
+                navigate("/profiling/preference");
+                return
+            }
+            navigate("/profiling/suggestion");
         } catch (e) {
-            const message = e?.message || "Terjadi kesalahan saat menyimpan jawaban";
+            const message = e?.message || "An error occurred while saving the answers.";
             setError(message);
         } finally {
             setLoading(false);
@@ -232,35 +318,14 @@ export default function Questioner() {
     };
 
     const handleConfirmRefreshNo = () => {
-        // Do nothing; keep the current page/state
         refreshModal.close();
     };
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
             <div className="w-full max-w-2xl bg-white shadow-md rounded-2xl p-8">
-                {isPendingQuestions ? (
-                    <div className="flex flex-col items-center justify-center space-y-3 text-center p-6">
-
-                        {/* Loading Spinner / Icon AI */}
-                        <div className="relative flex h-12 w-12">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-12 w-12 bg-indigo-500 items-center justify-center">
-                                <Sparkles className="h-6 w-6 text-white animate-pulse" />
-                            </span>
-                        </div>
-
-                        {/* Wording Utama */}
-                        <h3 className="text-lg font-semibold text-gray-900 animate-pulse">
-                            Curating your personalized session...
-                        </h3>
-
-                        {/* Wording Pendukung */}
-                        <p className="text-sm text-gray-500 max-w-xs">
-                            Our AI is crafting specific questions to understand your travel preferences better.
-                        </p>
-
-                    </div>
+                {showLoading && !questionsError ? (
+                    <Loading isComplete={!isPendingQuestions && questions.length > 0} />
                 ) : questionsError ? (
                     <div className="text-center">
                         <p className="text-red-600">Failed to load questions: {questionsError.message}</p>
@@ -271,17 +336,17 @@ export default function Questioner() {
                     </div>
                 ) : (
                     <>
-                        <div className="text-center mb-6">
+                        <div className="text-center mb-6 animate-in fade-in duration-700">
                             <h1 className="text-3xl font-semibold text-gray-900">Personality Quiz</h1>
                             <p className="text-gray-500">Help us understand you better for perfect matches</p>
                         </div>
 
-                        <div className="mb-4">
+                        <div className="mb-4 animate-in fade-in duration-700 delay-100">
                             <ProgressBar current={index + 1} total={total} />
                         </div>
-                        <p className="text-center text-sm text-gray-600 mb-6">Question {index + 1} of {total}</p>
+                        <p className="text-center text-sm text-gray-600 mb-6 animate-in fade-in duration-700 delay-100">Question {index + 1} of {total}</p>
 
-                        <div className="rounded-2xl border border-gray-200 p-6">
+                        <div className="rounded-2xl border border-gray-200 p-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
                             <h2 className="text-xl font-semibold text-gray-900 mb-4">{q.question}</h2>
                             {q.type === "number" && (
                                 <div className="flex flex-col gap-3">

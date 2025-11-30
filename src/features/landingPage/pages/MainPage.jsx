@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
 import { Hero } from "../components/Hero";
-import HowItWorks from "../../auth/pages/HowItWorksPage";
+import HowItWorks from "../components/HowItWorksPage";
 import Event from "../components/EventPage";
 import { Footer } from "../components/Footer";
 import { Purpose } from "../components/Purpose";

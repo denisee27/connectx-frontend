@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useModal } from "../../../core/stores/uiStore";
 import { TriangleAlert } from "lucide-react";
+import { useAuth } from "../../../core/auth/useAuth";
 
 const TOPICS = [
     "Career & Networking",
@@ -18,6 +19,7 @@ const TOPICS = [
 const MEET_UP = ["Intimate", "Small group", "Open event"];
 
 export default function Preference() {
+    const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
     const refreshModal = useModal("profilingRefreshConfirm");
     const [selected, setSelected] = useState(() => {
@@ -84,7 +86,11 @@ export default function Preference() {
             localStorage.setItem("profilingPreferences", JSON.stringify(selected));
             localStorage.setItem("profilingMeetUpPref", JSON.stringify(meetUp));
         } catch (_) { }
-        navigate("/profiling/form");
+        if (!isAuthenticated) {
+            navigate("/profiling/form");
+            return
+        }
+        navigate("/profiling/suggestion");
     };
 
 

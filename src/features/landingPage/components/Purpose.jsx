@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import person1 from "../../../assets/people/person1.svg";
 import person2 from "../../../assets/people/person2.svg";
 import person3 from "../../../assets/people/person3.svg";
@@ -9,6 +9,69 @@ import { useNavigate } from "react-router-dom";
 
 export const Purpose = () => {
     const navigate = useNavigate();
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const images = [person1, person2, person3];
+
+    const [isTransitioning, setIsTransitioning] = useState(false);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setIsTransitioning(true);
+            setTimeout(() => {
+                setCurrentIndex((prev) => (prev + 1) % images.length);
+                setIsTransitioning(false);
+            }, 500);
+        }, 3000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const getCardStyle = (index) => {
+        let position = (index - currentIndex + images.length) % images.length;
+
+        const baseStyle = "absolute rounded-2xl overflow-hidden shadow-lg bg-white flex-shrink-0 ease-in-out";
+        const transitionStyle = isTransitioning && position === 0 ? "transition-transform duration-500" : "transition-all duration-700";
+
+        // Front card
+        if (position === 0) {
+            return {
+                className: `${baseStyle} ${transitionStyle} z-30`,
+                style: {
+                    left: 'calc(50% - 170px)',
+                    width: '260px',
+                    height: '340px',
+                    opacity: 1,
+                    transform: isTransitioning ? 'translateX(-120%) scale(0.9)' : 'translateX(0) scale(1)'
+                }
+            };
+        }
+        // Middle card
+        else if (position === 1) {
+            return {
+                className: `${baseStyle} transition-all duration-700 z-20`,
+                style: {
+                    left: 'calc(50% - 90px)',
+                    width: '220px',
+                    height: '290px',
+                    opacity: 0.8,
+                    transform: 'translateX(0) scale(1)'
+                }
+            };
+        }
+        // Back card
+        else {
+            return {
+                className: `${baseStyle} transition-all duration-700 z-10`,
+                style: {
+                    left: 'calc(50% - 10px)',
+                    width: '180px',
+                    height: '240px',
+                    opacity: 0.6,
+                    transform: 'translateX(0) scale(1)'
+                }
+            };
+        }
+    };
+
     return (
         <div className="mt-[80px]">
             <div className="md:py-24 bg-white">
@@ -26,18 +89,16 @@ export const Purpose = () => {
                             <button onClick={() => navigate("/profiling/questioner")} className="bg-black hover:cursor-pointer text-white px-6 py-3 rounded-lg font-semibold shadow hover:bg-gray-800 cursor-pointer">Start Now</button>
                         </div>
 
-                        <div className="flex-shrink-0 flex justify-center items-center relative order-1 md:order-2" style={{ minHeight: '340px', minWidth: '380px' }}>
-                            <div className="absolute left-0 z-30 w-[260px] h-[340px] rounded-2xl overflow-hidden shadow-lg bg-white flex-shrink-0">
-                                <img src={person1} alt="Meetup" className="w-full h-full object-cover" />
-                            </div>
-
-                            <div className="absolute left-[80px] z-20 w-[220px] h-[290px] rounded-2xl overflow-hidden shadow-lg bg-white flex-shrink-0" >
-                                <img src={person2} alt="Meetup" className="w-full h-full object-cover opacity-80" />
-                            </div>
-
-                            <div className="absolute left-[160px] z-10 w-[180px] h-[240px] rounded-2xl overflow-hidden shadow-lg bg-white flex-shrink-0" >
-                                <img src={person3} alt="Meetup" className="w-full h-full object-cover opacity-60" />
-                            </div>
+                        {/* Section Card */}
+                        <div className="flex-shrink-0 flex justify-center items-center relative order-1 md:order-2 w-full max-w-[450px]" style={{ minHeight: '340px' }}>
+                            {images.map((img, idx) => {
+                                const { className, style } = getCardStyle(idx);
+                                return (
+                                    <div key={idx} className={className} style={style}>
+                                        <img src={img} alt="Meetup" className="w-full h-full object-cover" />
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
@@ -73,11 +134,11 @@ export const Purpose = () => {
                 <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div className="rounded-t-2xl overflow-hidden bg-[var(--color-primary)] flex flex-col h-full">
                         <div className="relative p-6 md:p-8">
-                            <div className=" rounded-lg overflow-hidden h-[300px] md:h-[350px] flex items-center justify-center">
+                            <div className=" rounded-lg overflow-hidden flex items-center justify-center">
                                 <img
                                     src={findImage}
                                     alt="Find Connection Collage"
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-auto object-contain"
                                 />
                             </div>
                         </div>
@@ -97,11 +158,11 @@ export const Purpose = () => {
                     </div>
                     <div className="rounded-t-2xl shadow-xl overflow-hidden bg-[var(--color-secondary)] flex flex-col h-full">
                         <div className="relative p-6 md:p-8">
-                            <div className="bg-white rounded-lg overflow-hidden h-[300px] md:h-[350px] flex items-center justify-center shadow-lg">
+                            <div className="bg-white rounded-lg overflow-hidden flex items-center justify-center shadow-lg">
                                 <img
                                     src={hostImage}
                                     alt="Host It Collage"
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-auto object-contain"
                                 />
                             </div>
                         </div>
@@ -115,7 +176,7 @@ export const Purpose = () => {
                                 </p>
                             </div>
 
-                            <button onClick={() => navigate("/hosting")} className="bg-black hover:cursor-pointer text-white font-semibold py-3 px-8 rounded-lg hover:bg-gray-800 cursor-pointer transition duration-300 w-fit mt-6">
+                            <button onClick={() => navigate("/home/new-event")} className="bg-black hover:cursor-pointer text-white font-semibold py-3 px-8 rounded-lg hover:bg-gray-800 cursor-pointer transition duration-300 w-fit mt-6">
                                 Host Now
                             </button>
                         </div>

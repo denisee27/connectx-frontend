@@ -32,6 +32,12 @@ export const logoutUser = async () => {
   return api.post("/auth/logout");
 };
 
+export const forgotPassword = async (email) => {
+  logger.info("Attempting forgot password", email);
+  const data = await api.post("/auth/forgot-password", email);
+  return data;
+};
+
 /**
  * Get current user profile/session restore
  * @returns {Promise<object>}
@@ -48,6 +54,22 @@ export const registerUser = async (credentials) => {
   logger.info("Attempting registration", { email: credentials.email });
   const data = await api.post("/auth/register", credentials);
   logger.warn("information data", data);
+  return data;
+};
+
+/**
+ * Reset password using token and new credentials
+ * @param {{ token: string, password: string, confirmPassword?: string }} payload
+ * @returns {Promise<{ message?: string }>}
+ */
+export const resetPassword = async (payload) => {
+  const { token, password, confirmPassword } = payload;
+  logger.info("Attempting password reset", { hasToken: Boolean(token) });
+  if (!token) {
+    throw new Error("Reset token is required.");
+  }
+
+  const data = await api.post("/auth/reset-password", { token, password, confirmPassword });
   return data;
 };
 
@@ -86,6 +108,13 @@ export const verifyEmail = async (payload) => {
   return data;
 };
 
+export const requestEmailVerification = async (email) => {
+  console.log('email', email)
+  logger.info("Attempting request email verification", email);
+  const data = await api.post("/auth/email/request", email);
+  return data;
+};
+
 /**
  * Convenience export for future service composition.
  */
@@ -93,7 +122,10 @@ export const authApi = {
   login: loginUser,
   logout: logoutUser,
   getMe,
+  forgotPassword: forgotPassword,
   refresh: refreshToken,
   register: registerUser,
+  resetPassword: resetPassword,
   verifyEmail: verifyEmail,
+  requestEmailVerification: requestEmailVerification,
 };

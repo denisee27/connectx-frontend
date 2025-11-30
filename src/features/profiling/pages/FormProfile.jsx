@@ -127,7 +127,7 @@ export default function FormProfile() {
 
     const confirmYes = () => {
         sessionStorage.setItem("profilingSkipRefreshModal", "1");
-        // resetProfilingAll(reset);
+        resetProfilingAll(reset);
         refreshModal.close();
         navigate("/profiling/questioner", { replace: true });
     };

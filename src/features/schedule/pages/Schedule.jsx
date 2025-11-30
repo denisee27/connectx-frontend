@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { MapPin, Users, ChevronRight } from "lucide-react";
+import { MapPin, Users, ChevronRight, ExternalLink, Utensils, Handshake, CalendarCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePastEvent, useUpcomingEvent } from "../hooks/useSchedule";
 import { FadeIn } from "../../../shared/components/ui/FadeIn.jsx";
@@ -27,7 +27,7 @@ const groupEventsByDay = (events) => {
             ...event,
             time: eventDate.toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" }),
             location: event.address || event.city?.name || "N/A",
-            guests: event.maxParticipant != null ? `${event.maxParticipant} participants` : "N/A",
+            guests: event.maxParticipant != null ? `${event.maxParticipant} capacity` : "N/A",
             banner: event?.banner?.trim().replace(/`/g, '') || "https://via.placeholder.com/144",
         };
 
@@ -122,7 +122,7 @@ export const Schedule = () => {
 
                                             {/* 2. Timeline column with dot; line is global */}
                                             <div className="relative">
-                                                <div className="absolute left-1/2 -translate-x-1/2 top-1.5 h-3 w-3 rounded-full bg-accent border-2 border-white shadow" aria-hidden />
+                                                <div className="absolute left-1/2 -translate-x-1/2 top-1.5 h-3 w-3 rounded-full bg-primary border-2 border-white shadow" aria-hidden />
                                             </div>
 
                                             {/* 3. Cards column */}
@@ -133,7 +133,7 @@ export const Schedule = () => {
                                                 </div>
                                                 {/* Mobile date above cards */}
                                                 {day.items.map((ev, ei) => (
-                                                    <EventCard key={`${day.dayLabel}-${ei}`} {...ev} onClick={() => navigate(`/home/event/${ev.slug}`)} />
+                                                    <EventCard key={ei} {...ev} onClick={() => navigate(`/home/event/${ev.slug}`)} />
                                                 ))}
                                             </div>
                                         </div>
@@ -167,30 +167,56 @@ const TabButton = ({ active, children, onClick }) => (
 );
 
 /** Event Card */
-const EventCard = ({ time, title, location, guests, banner, onClick }) => (
-    <div onClick={onClick} className="cursor-pointer flex items-center justify-between gap-3 md:gap-6 rounded-2xl border border-border bg-card p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex-1 min-w-0">
-            <div className="text-xs md:text-sm text-muted-foreground">{time}</div>
-            <h3 className="mt-1 text-base md:text-xl font-semibold leading-tight md:leading-snug line-clamp-2">
-                {title}
-            </h3>
+const EventCard = ({ time, title, location, guests, banner, onClick, type, gmaps, placeName }) => {
+    const getIcon = (label) => {
+        const lowerLabel = label?.toLowerCase();
+        if (lowerLabel === "dinner") return <Utensils size={14} className="text-white" />;
+        if (lowerLabel === "meetup") return <Handshake size={14} className="text-white" />;
+        return <CalendarCheck size={14} className="text-white" />;
+    };
 
-            <div className="mt-2 md:mt-3 flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm text-muted-foreground">
-                <span className="inline-flex items-center gap-1"><MapPin size={16} /> {location}</span>
-                <span className="inline-flex items-center gap-1"><Users size={16} /> {guests}</span>
+    return (
+        <div onClick={onClick} className="cursor-pointer flex items-center justify-between gap-3 md:gap-6 rounded-2xl border border-border bg-card p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FF9836] px-3 py-1 text-xs font-bold text-white shadow-sm capitalize">
+                        {getIcon(type)}
+                        {type}
+                    </span>
+                    <div className="text-xs md:text-sm text-muted-foreground">{time}</div>
+                </div>
+                <h3 className="mt-1 text-base md:text-xl font-semibold leading-tight md:leading-snug line-clamp-2">
+                    {title}
+                </h3>
+                <div className="mt-2 md:mt-3 flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm text-muted-foreground">
+                    {placeName && gmaps && (
+                        <a
+                            href={gmaps}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1 hover:text-primary transition-colors z-10"
+                        >
+                            <MapPin size={16} />
+                            {placeName}
+                        </a>
+                    )}
+                    {!placeName && <span className="inline-flex items-center gap-1"><MapPin size={16} /> {location}</span>}
+                    <span className="inline-flex items-center gap-1"><Users size={16} /> {guests}</span>
+                </div>
+            </div>
+
+            {/* Thumbnail */}
+            <div className="shrink-0">
+                <img
+                    src={env.VITE_API_BASE_URL + '/rooms/image/' + banner}
+                    alt={`${title}`}
+                    className="h-24 w-24 md:h-36 md:w-36 rounded-xl object-cover"
+                    loading="lazy"
+                    decoding="async"
+                    sizes="(max-width: 767px) 96px, 144px"
+                />
             </div>
         </div>
-
-        {/* Thumbnail */}
-        <div className="shrink-0">
-            <img
-                src={env.VITE_API_BASE_URL + '/rooms/image/' + banner}
-                alt={`${title}`}
-                className="h-24 w-24 md:h-36 md:w-36 rounded-xl object-cover"
-                loading="lazy"
-                decoding="async"
-                sizes="(max-width: 767px) 96px, 144px"
-            />
-        </div>
-    </div>
-);
+    );
+};

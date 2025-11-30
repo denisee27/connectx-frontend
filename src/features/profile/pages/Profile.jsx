@@ -1,10 +1,14 @@
-import React from "react";
-import { MapPin, Briefcase, CalendarDays, Zap, Users, Brain, Mail, Globe, User, Mars, Venus, Sparkles, Heart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { MapPin, Briefcase, Zap, Brain, Mail, Globe, User, Mars, Venus, Sparkles, Heart, Utensils, Handshake, CalendarCheck } from "lucide-react";
 import { useProfile } from "../hooks/useProfile";
 import Markdown from "react-markdown";
 import { FadeIn } from "../../../shared/components/ui/FadeIn.jsx";
 import SkeletonLoader from "../../../shared/components/ui/SkeletonLoader.jsx";
 import { useNavigate } from "react-router-dom";
+import { resetProfilingStorage } from "../../profiling/utils/reset.js";
+import { useAuth } from "../../../core/auth/useAuth";
+import { LoginModal } from "../../auth/components/LoginModal";
+import { env } from "../../../core/config/env.js";
 
 /**
  * Profile Page
@@ -14,36 +18,23 @@ import { useNavigate } from "react-router-dom";
  */
 export const Profile = () => {
     const { data: profile, isLoading, isError } = useProfile();
+    console.log('profile', profile);
     const navigate = useNavigate();
-    const user = profile?.data || {
-        name: "Budi Santoso",
-        city: "Jakarta",
-        role: "Software Engineer",
-        age: "28 tahun",
-        email: "budi.santoso@example.com",
-        country: "Indonesia",
-        gender: "Laki-laki",
-        avatar:
-            "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=320&auto=format&fit=crop",
-        stats: [
-            { icon: CalendarDays, label: "Events", value: 15 },
-            { icon: Zap, label: "Meetups", value: 12 },
-            { icon: Users, label: "Dinners", value: 23 },
-        ],
-        mbti: {
-            type: "INTJ",
-            summary:
-                "Anda adalah seorang pemikir strategis dengan visi jangka panjang yang kuat. Anda cenderung analitis, mandiri, dan sangat menghargai efisiensi.",
-            interests: [
-                "Technology",
-                "Innovation",
-                "Strategic Planning",
-                "Problem Solving",
-                "Data Analysis",
-                "System Design",
-            ],
-            description: "Direct and efficient, prefers facts over emotions",
-        },
+    const { isAuthenticated } = useAuth();
+    const [showLoginModal, setShowLoginModal] = useState(false);
+
+    useEffect(() => {
+        if (!isAuthenticated) {
+            setShowLoginModal(true);
+        } else {
+            setShowLoginModal(false);
+        }
+    }, [isAuthenticated]);
+
+
+    const handleRegenerate = () => {
+        resetProfilingStorage();
+        navigate("/profiling/questioner");
     };
 
     return (
@@ -57,11 +48,17 @@ export const Profile = () => {
                         <section className="rounded-3xl bg-gradient-to-br from-primary/10 to-secondary/10 p-6 sm:p-8 shadow-sm">
                             <div className="flex flex-col items-center text-center sm:grid sm:grid-cols-[112px_1fr] sm:items-center sm:gap-6 sm:text-left">
                                 {/* Avatar */}
-                                <img
-                                    src={profile?.profilePicture || "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=320&auto=format&fit=crop"}
-                                    alt={profile?.name}
-                                    className="h-24 w-24 sm:h-28 sm:w-28 rounded-full object-cover border-4 border-white shadow mx-auto sm:mx-0"
-                                />
+                                {profile?.profilePictureUrl ? (
+                                    <img
+                                        src={env.VITE_API_BASE_URL + '/rooms/image/' + profile?.profilePictureUrl}
+                                        alt={profile?.name}
+                                        className="h-24 w-24 sm:h-28 sm:w-28 rounded-full object-cover border-4 border-white shadow mx-auto sm:mx-0"
+                                    />
+                                ) : (
+                                    <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-gray-100 border-4 border-white shadow mx-auto sm:mx-0 flex items-center justify-center">
+                                        <User className="text-primary" size={48} />
+                                    </div>
+                                )}
 
                                 {/* Identity */}
                                 <div>
@@ -78,14 +75,15 @@ export const Profile = () => {
 
                                     {/* Stats */}
                                     <div className="mt-6 grid grid-cols-3 gap-4 sm:max-w-md mx-auto sm:mx-0">
-                                        {user?.stats?.map((s) => (
-                                            <StatCard key={s.label} icon={s.icon} label={s.label} value={s.value} />
-                                        ))}
+                                        <StatCard icon={Utensils} label={'Dinners'} value={profile?.joinedRoomCounts?.dinner} />
+                                        <StatCard icon={Handshake} label={'Meetups'} value={profile?.joinedRoomCounts?.meetup} />
+                                        <StatCard icon={CalendarCheck} label={'Events'} value={profile?.joinedRoomCounts?.event} />
+
                                     </div>
 
                                     {/* Preferences / Interests */}
                                     {profile?.preferences?.length > 0 && (
-                                        <div className="mt-6 pt-6 border-primary/10">
+                                        <div className="mt-2 pt-6 border-primary/10">
                                             <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2 justify-center sm:justify-start">
                                                 <Heart size={16} className="text-rose-500" />
                                                 Interests & Hobbies
@@ -119,9 +117,9 @@ export const Profile = () => {
                                         <Brain size={30} className="text-primary" />
                                     </div>
                                     <div>
-                                        <h2 className="text-xl sm:text-2xl font-semibold">Analisis Kepribadian MBTI</h2>
+                                        <h2 className="text-xl sm:text-2xl font-semibold">Analysis of Personality Type</h2>
                                         <p className="mt-1 text-sm text-muted-foreground">
-                                            Berdasarkan analisis mendalam dari respons kuesioner Anda
+                                            Based on your profile & responses to the questionnaire.
                                         </p>
                                     </div>
                                 </div>
@@ -132,10 +130,10 @@ export const Profile = () => {
                                 </span>
 
                             </div>
-                            {profile?.personality ? (<>
+                            {profile?.descPersonal ? (<>
                                 {/* Summary */}
                                 <div className="mx-6 sm:mx-8 mb-6 rounded-2xl bg-muted p-4 sm:p-5 border border-border">
-                                    <h3 className="font-semibold mb-2">Ringkasan Kepribadian</h3>
+                                    <h3 className="font-semibold mb-2">Summary of Personality</h3>
                                     <p className="text-sm sm:text-base text-muted-foreground">
                                         <Markdown>
                                             {profile?.descPersonal}
@@ -145,29 +143,53 @@ export const Profile = () => {
 
                                 {/* MBTI Type */}
                                 <div className="mt-6 p-6 sm:p-8 border-t border-border">
-                                    <h3 className="font-semibold mb-3">Tipe Kepribadian</h3>
+                                    <h3 className="font-semibold mb-3">Type of Personality</h3>
                                     <div className="rounded-2xl bg-muted p-5 border border-border">
                                         <div className="text-3xl sm:text-4xl font-extrabold text-primary tracking-wide">
                                             {profile?.mbti}
                                         </div>
                                         <p className="mt-2 text-sm text-muted-foreground">
-                                            {user.mbti.description}
+                                            {profile?.mbtiDesc}
                                         </p>
+                                    </div>
+                                    <div className="mt-6 flex justify-end">
+                                        <button
+                                            onClick={() => handleRegenerate()}
+                                            className="group cursor-pointer relative inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-full text-white font-semibold text-lg shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+                                        >
+                                            {/* Gradient Background */}
+                                            <div className="absolute inset-0 bg-gradient-to-r from-[#FF9836] to-[#FF7A2F] transition-transform duration-300 group-hover:scale-105"></div>
+
+                                            {/* Shine Effect */}
+                                            <div className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-gradient-to-r from-transparent via-white to-transparent -skew-x-12 translate-x-[-100%] group-hover:animate-shine"></div>
+
+                                            {/* Content */}
+                                            <Sparkles className="w-5 h-5 relative z-10 animate-pulse" />
+                                            <span className="relative z-10">Regenerate Personality</span>
+                                        </button>
                                     </div>
                                 </div>
                             </>) : (
 
-                                <div className="flex flex-col items-center justify-center pb-10 pt-5 px-4 text-center space-y-4">
+                                <div className="flex flex-col items-center justify-center pb-10 pt-5 px-4 text-center space-y-6">
 
                                     <button
-                                        onClick={() => navigate("/profiling/questioner")} className="cursor-pointer group relative inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 rounded-full text-white font-bold text-lg shadow-lg hover:shadow-blue-500/25 hover:scale-105 transition-all duration-300">
-                                        <Sparkles className="w-5 h-5 animate-pulse text-white" />
-                                        <span>Generate Your Personality</span>
-                                        <div className="absolute -inset-1 bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 rounded-full blur opacity-30 group-hover:opacity-60 transition duration-200"></div>
+                                        onClick={() => handleRegenerate()}
+                                        className="group relative inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-full text-white font-semibold text-lg shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+                                    >
+                                        {/* Gradient Background */}
+                                        <div className="absolute inset-0 bg-gradient-to-r from-[#FF9836] to-[#FF7A2F] transition-transform duration-300 group-hover:scale-105"></div>
+
+                                        {/* Shine Effect */}
+                                        <div className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-gradient-to-r from-transparent via-white to-transparent -skew-x-12 translate-x-[-100%] group-hover:animate-shine"></div>
+
+                                        {/* Content */}
+                                        <Sparkles className="w-5 h-5 relative z-10 animate-pulse" />
+                                        <span className="relative z-10">Generate Your Personality</span>
                                     </button>
 
                                     {/* Wording Menarik */}
-                                    <div className="max-w-md space-y-1">
+                                    <div className="max-w-md space-y-2">
                                         <h3 className="text-lg font-semibold text-gray-800">
                                             Discover Your Inner Traveler
                                         </h3>
@@ -183,32 +205,25 @@ export const Profile = () => {
                     </>
                 )}
             </FadeIn>
-        </div >
+
+            <LoginModal
+                isOpen={showLoginModal}
+                onClose={() => setShowLoginModal(false)}
+            />
+        </div>
     );
 };
 
 /** Small badge component */
 const Badge = ({ icon: Icon, text }) => (
     <span className="inline-flex items-center gap-2 rounded-full border border-border bg-white/90 px-3 py-1 text-sm shadow-sm">
-        <Icon size={16} className="text-muted-foreground" />
+        <Icon size={16} className="text-primary" />
         <span className="capitalize">
             {text}
         </span>
     </span>
 );
 
-/** Navigation chip */
-const NavChip = ({ children, active = false }) => (
-    <button
-        type="button"
-        className={
-            "rounded-full px-4 py-2 text-sm transition-colors " +
-            (active ? "bg-primary text-white" : "bg-muted hover:bg-primary/10")
-        }
-    >
-        {children}
-    </button>
-);
 
 /** Stat card */
 const StatCard = ({ icon: Icon, label, value }) => (

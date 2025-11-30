@@ -1,14 +1,14 @@
 import React, { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { MapPin, CalendarDays, Users, Tag, X, CheckCircle2, ExternalLink, Bookmark } from "lucide-react";
-import { useEvent } from "../hooks/useEvent";
+import { MapPin, CalendarDays, Users, Tag, X, CheckCircle2, ExternalLink, Bookmark, AlertTriangle } from "lucide-react";
+import { useEvent, useJoinEvent } from "../hooks/useEvent";
 import { format } from "date-fns";
 import SkeletonLoader from "../../../shared/components/ui/SkeletonLoader";
 import { FadeIn } from "../../../shared/components/ui/FadeIn";
 import { useAuth } from "../../../core/auth/useAuth";
-import LoginModal from "../../auth/components/LoginModal";
 import { env } from "../../../core/config/env";
 import { useCreatePayment, useStatusPayment } from "../hooks/usePayment";
+import { LoginModal } from "../../auth/components/LoginModal";
 
 function Modal({ open, onClose, children }) {
   React.useEffect(() => {
@@ -40,27 +40,53 @@ function Modal({ open, onClose, children }) {
   );
 }
 
-function Badge({ type }) {
-  const map = {
-    meetup: "bg-indigo-100 text-indigo-700",
-    dinner: "bg-pink-100 text-pink-700",
-    event: "bg-orange-100 text-orange-700",
-  };
-  const label = type === "meetup" ? "Meetup" : type === "dinner" ? "Dinner" : "Event";
+function ConfirmationModal({ isOpen, onClose, onConfirm, eventTitle, isLoading }) {
+  if (!isOpen) return null;
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${map[type] || map.event
-        }`}
-    >
-      {label}
-    </span>
+    <Modal open={isOpen} onClose={isLoading ? undefined : onClose}>
+      <div className="p-6 sm:p-8">
+        <div className="flex flex-col items-center text-center">
+          <div className="mb-4 rounded-full bg-primary/10 p-3 text-primary">
+            <CheckCircle2 size={32} />
+          </div>
+          <h2 className="text-xl font-bold text-foreground sm:text-2xl">Join Event</h2>
+          <p className="mt-2 text-muted-foreground">
+            Are you sure you want to join <span className="font-semibold text-foreground">{eventTitle}</span>?
+          </p>
+          <div className="mt-8 flex w-full gap-3">
+            <button
+              onClick={onClose}
+              disabled={isLoading}
+              className="flex-1 rounded-xl border border-border bg-card py-2.5 font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              No, Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={isLoading}
+              className="flex-1 rounded-xl bg-primary py-2.5 font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Joining...
+                </>
+              ) : (
+                "Yes, Join"
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
 export default function Event() {
   const { slug } = useParams();
   const { data: event, isPending } = useEvent(slug);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const { mutateAsync: joinRoom, isPending: isJoining } = useJoinEvent();
   const navigate = useNavigate();
   const [latestOrderId, setLatestOrderId] = useState(null);
   const { data: polledPaymentStatus } = useStatusPayment(latestOrderId);
@@ -74,40 +100,64 @@ export default function Event() {
   }, [event]);
   const [isLoginOpen, setLoginOpen] = useState(false);
   const [isPaymentOpen, setPaymentOpen] = useState(false);
+  const [isConfirmationOpen, setConfirmationOpen] = useState(false);
   const [isSuccessOpen, setSuccessOpen] = useState(false);
   const [paymentResult, setPaymentResult] = useState(null);
 
+  const isUserPaid = useMemo(() => {
+    return event?.isPayment;
+  }, [user]);
+
+  const remainingSpots = useMemo(() => {
+    const max = event?.maxParticipant || 0;
+    const current = event?._count?.participants || 0;
+    return Math.max(0, max - current);
+  }, [event]);
+
+  const isEventFull = remainingSpots === 0 && (event?.maxParticipant > 0);
+
   const handleJoinClick = () => {
-    if (isAuthenticated) {
-      setPaymentOpen(true);
-    } else {
+    if (isEventFull) return;
+
+    if (!isAuthenticated) {
       setLoginOpen(true);
+      return;
+    }
+
+    if (isUserPaid) {
+      setConfirmationOpen(true);
+    } else {
+      setPaymentOpen(true);
     }
   };
 
   const handleLoginSuccess = () => {
     setLoginOpen(false);
-    setPaymentOpen(true);
+    // Requirement: setelah login akan masuk ke popup confirmation join this event
+    setConfirmationOpen(true);
+  };
+
+  const handleConfirmationJoin = async () => {
+    await joinRoom(event?.id);
+    setConfirmationOpen(false);
+    navigate("/home/schedule");
   };
 
   const handlePaymentSuccess = (paymentData) => {
-    console.log("paymentData received", paymentData);
     if (paymentData?.orderId) {
       setLatestOrderId(paymentData.orderId);
-      console.log("orderId set for polling:", paymentData.orderId);
     }
     setPaymentOpen(false);
     setPaymentResult(paymentData || null);
     setSuccessOpen(true);
   };
 
-  // Navigate when polled status becomes ACTIVE (runs every 5s via hook)
   React.useEffect(() => {
     const status = polledPaymentStatus?.data?.status;
     if (status) {
       console.log("Polled payment status:", status);
     }
-    if (status && String(status).toUpperCase() === "SETTLED") {
+    if (status && (String(status).toUpperCase() === "SETTLED" || String(status).toUpperCase() === "PAID")) {
       navigate("/home/schedule");
     }
   }, [polledPaymentStatus, navigate]);
@@ -185,8 +235,8 @@ export default function Event() {
                       )}
 
                       {/* <span className="inline-flex items-center gap-1">
-                        <Tag size={16} /> <Badge type={event?.type} />
-                      </span> */}
+                          <Tag size={16} /> <Badge type={event?.type} />
+                        </span> */}
 
                       {event?.category?.name && (
                         <span className="inline-flex items-center gap-1">
@@ -235,6 +285,37 @@ export default function Event() {
                     )}
                   </div>
                 </div>
+                {/* Availability Alert Section */}
+                <div className="mt-6 space-y-4">
+                  {isEventFull && (
+                    <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="mt-0.5 shrink-0 text-red-600" size={20} />
+                        <div>
+                          <h3 className="font-semibold text-red-900">Event Fully Booked</h3>
+                          <p className="mt-1 text-sm text-red-700">
+                            We apologize, but this event has reached its maximum capacity. Please check back later or look for other upcoming events.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {!event.isCreator && !event.isJoining && remainingSpots <= 5 && remainingSpots > 0 && (
+                    <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-orange-800">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="mt-0.5 shrink-0 text-orange-600" size={20} />
+                        <div>
+                          <h3 className="font-semibold text-orange-900">Hurry up! Limited spots available</h3>
+                          <p className="mt-1 text-sm text-orange-700">
+                            There are only <strong>{remainingSpots}</strong> spots remaining for this event. Secure your place now before it's too late!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <p className="mt-6 max-w-3xl text-base leading-relaxed text-foreground/80">
                   {event?.description}
                 </p>
@@ -341,28 +422,55 @@ export default function Event() {
             </div>
           </FadeIn>
         )}
+
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-glass backdrop-blur supports-[backdrop-filter]:bg-glass">
           <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3 sm:px-6 md:px-8">
-            <div className="text-sm text-muted-foreground">
-              Registration Fee:{" "}
-              <span className="font-semibold text-foreground">
-                Rp {registrationFee.toLocaleString("id-ID")}
-              </span>
-            </div>
-            <button
-              onClick={handleJoinClick}
-              className="w-full max-w-xs bg-primary text-white font-semibold py-3 px-6 rounded-full hover:bg-secondary transition-colors duration-300"
-            >
-              Join This Event
-            </button>
+            {event?.isCreator ? (
+              <div className="w-full text-center py-3 font-semibold text-primary">
+                You are the Host of this Event ✨
+              </div>
+            ) : event?.isJoining ? (
+              <div className="w-full text-center py-3 font-semibold text-green-600">
+                You have already joined this Event ✅
+              </div>
+            ) : (
+              <>
+                <div className="text-sm text-muted-foreground">
+                  {!isUserPaid && (
+                    <>
+                      Registration Fee:{" "}
+                      <span className="font-semibold text-foreground">
+                        Rp {registrationFee.toLocaleString("id-ID")}
+                      </span>
+                    </>
+                  )}
+                </div>
+                <button
+                  onClick={handleJoinClick}
+                  disabled={isJoining || isEventFull}
+                  className={`w-full max-w-xs font-semibold py-3 px-6 rounded-full transition-colors duration-300 text-white ${isEventFull ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-secondary"
+                    }`}
+                >
+                  {isEventFull ? "Full Booked" : "Join This Event"}
+                </button>
+              </>
+            )}
           </div>
         </div>
-      </div>
+      </div >
 
       <LoginModal
         isOpen={isLoginOpen}
         onClose={() => setLoginOpen(false)}
         onSuccess={handleLoginSuccess}
+      />
+
+      <ConfirmationModal
+        isOpen={isConfirmationOpen}
+        onClose={() => setConfirmationOpen(false)}
+        onConfirm={handleConfirmationJoin}
+        eventTitle={event?.title}
+        isLoading={isJoining}
       />
 
       <PaymentModal
@@ -387,6 +495,7 @@ export default function Event() {
 
 function PaymentModal({ isOpen, onClose, onSuccess, event, price }) {
   const { user } = useAuth();
+
   const { mutateAsync: createPayment, isPending } = useCreatePayment();
   const [orderId, setOrderId] = useState();
 
@@ -412,15 +521,22 @@ function PaymentModal({ isOpen, onClose, onSuccess, event, price }) {
   const buildCustomerPayload = () => {
     if (!user) return undefined;
 
-    const derivedName =
-      [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.name;
-    const [first, ...rest] = (derivedName || "").split(/\s+/).filter(Boolean);
+    const fullName = (user.data.name || "").trim();
+    const nameParts = fullName.split(/\s+/).filter(Boolean);
+    let firstName = null;
+    let lastName = null;
 
+    if (nameParts.length > 0) {
+      firstName = nameParts[0];
+      if (nameParts.length > 1) {
+        lastName = nameParts.slice(1).join(" ");
+      }
+    }
     return {
-      firstName: user.firstName || first || undefined,
-      lastName: user.lastName || (rest.length ? rest.join(" ") : undefined),
-      email: user.email,
-      phone: user.phone || user.phoneNumber,
+      firstName: firstName || undefined,
+      lastName: lastName || undefined,
+      email: user?.data?.email,
+      phone: user?.data?.phoneNumber || user?.data?.phoneNumber,
     };
   };
 
@@ -429,6 +545,7 @@ function PaymentModal({ isOpen, onClose, onSuccess, event, price }) {
     try {
       const payload = {
         amount: totalPayable || 1,
+        roomId: event?.id,
         items: [
           {
             id: String(event?._id || event?.id || event?.slug || "event-registration"),
@@ -450,7 +567,7 @@ function PaymentModal({ isOpen, onClose, onSuccess, event, price }) {
       if (!paymentData?.orderId) {
         throw new Error("Payment failed, please try again.");
       }
-      console.log('paymentdata', paymentData)
+      console.log("Payment Data:", paymentData);
       setOrderId(paymentData?.orderId);
       if (paymentData?.redirectUrl) {
         window.open(paymentData.redirectUrl, "_blank", "noopener,noreferrer");

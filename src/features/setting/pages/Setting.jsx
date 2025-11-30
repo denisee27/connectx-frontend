@@ -5,6 +5,8 @@ import { env } from "../../../core/config/env.js";
 import { useUpdateUser, useUploadUserAvatar } from "../../users/hooks/useUserMutations.js";
 import { useCities, useCountries } from "../../profiling/hooks/useProfiling";
 import { useSetting } from "../hooks/useSetting.jsx";
+import { useAuthStore } from "../../auth/stores/authStore.js";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 
 /**
  * Setting Page – Update Profil
@@ -16,11 +18,10 @@ import { useSetting } from "../hooks/useSetting.jsx";
  */
 export const Setting = () => {
     const { data: userData, isPending } = useProfile();
-    console.log("userData", userData);
-    // Foto profil
+    const getMe = useAuthStore((state) => state.getMe);
+    const queryClient = useQueryClient();
     const [avatarFile, setAvatarFile] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState("");
-    // Data profil
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
@@ -137,15 +138,35 @@ export const Setting = () => {
     const addPreferenceToken = () => {
         const token = prefInput.trim();
         if (!token) return;
+
+        if (preferences.length >= 5) {
+            setErrors((prev) => ({ ...prev, preferences: "Maximum 5 preferences allowed" }));
+            return;
+        }
+
         setPreferences((prev) => {
             const exists = prev.some((p) => (typeof p === "object" ? p.name === token : p === token));
-            return exists ? prev : [...prev, token];
+            if (!exists) {
+                // Clear error if valid
+                setErrors((errs) => {
+                    const next = { ...errs };
+                    delete next.preferences;
+                    return next;
+                });
+                return [...prev, token];
+            }
+            return prev;
         });
         setPrefInput("");
     };
 
     const removePreferenceToken = (idx) => {
         setPreferences((prev) => prev.filter((_, i) => i !== idx));
+        setErrors((prev) => {
+            const next = { ...prev };
+            delete next.preferences;
+            return next;
+        });
     };
 
     const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -160,6 +181,7 @@ export const Setting = () => {
         if (!gender) next.gender = "Gender is required";
         if (!countryId) next.countryId = "Country is required";
         if (!cityId) next.cityId = "City is required";
+        if (preferences.length > 5) next.preferences = "Maximum 5 preferences allowed";
 
         if (currentPassword) {
             if (!validateStrongPassword(currentPassword))
@@ -179,9 +201,7 @@ export const Setting = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setFeedback({ type: "", message: "" });
-
         if (!currentPassword) clearPasswordSection();
-
         const valid = validateForm();
         if (!valid) {
             setFeedback({ type: "error", message: "Please review invalid inputs." });
@@ -231,6 +251,7 @@ export const Setting = () => {
                 };
 
                 await updateProfile(payload);
+                getMe();
             }
 
             setFeedback({ type: "success", message: "Changes saved successfully ✨" });
@@ -263,7 +284,7 @@ export const Setting = () => {
                     <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="mt-4 inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 font-semibold text-black shadow-sm transition-colors hover:bg-secondary"
+                        className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 font-semibold text-white shadow-sm transition-colors hover:bg-secondary"
                     >
                         <Upload size={18} /> Upload Foto
                     </button>
@@ -368,13 +389,13 @@ export const Setting = () => {
                                 {preferences.map((pref, idx) => (
                                     <span
                                         key={`${typeof pref === "object" ? pref.name : pref}-${idx}`}
-                                        className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-1 text-xs font-semibold text-black"
+                                        className="inline-flex items-center gap-1 rounded-full bg-primary px-2 py-1 text-xs font-semibold text-white"
                                     >
                                         {typeof pref === "object" ? pref.name : pref}
                                         <button
                                             type="button"
                                             onClick={() => removePreferenceToken(idx)}
-                                            className="ml-1 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
+                                            className="ml-1 rounded-full p-0.5 text-white hover:text-gray-300"
                                             aria-label="Remove preference"
                                         >
                                             <X size={14} />
@@ -494,7 +515,7 @@ export const Setting = () => {
                     <div className="mt-4 flex items-center justify-end">
                         <button
                             type="submit"
-                            className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-black shadow-sm transition-colors hover:bg-primary"
+                            className="cursor-pointer rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary"
                         >
                             Save Changes
                         </button>

@@ -56,6 +56,9 @@ export const useAuthStore = create((set, get) => ({
       } else {
         logger.info("Skipping logout API call: no access token present");
       }
+      if (localStorage.getItem("uid")) {
+        localStorage.removeItem("uid");
+      }
     } catch (exception) {
       logger.warn("Logout API call failed, clearing client session anyway", { exception });
     } finally {

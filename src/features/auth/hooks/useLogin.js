@@ -3,6 +3,7 @@ import { useAuthStore } from "../stores/authStore";
 import { authApi } from "../api";
 import { useUIStore } from "../../../core/stores/uiStore";
 import logger from "../../../core/utils/logger";
+
 export const useLogin = () => {
   const setAuth = useAuthStore((state) => state.setAuth);
   const showError = useUIStore((state) => state.showError);
@@ -11,6 +12,9 @@ export const useLogin = () => {
     mutationFn: authApi.login,
     onSuccess: (data) => {
       const { user, accessToken } = data.data;
+      if (localStorage.getItem("uid")) {
+        localStorage.removeItem("uid");
+      }
       setAuth({ user, accessToken });
     },
     onError: (error) => {

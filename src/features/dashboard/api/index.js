@@ -5,17 +5,23 @@ export const getCategories = async () => {
     return res;
 }
 
-export const getHighlights = async () => {
-    const res = await api.get("/rooms/highlights");
+export const getHighlights = async (cityId) => {
+    const res = await api.get(`/rooms/highlights?cityId=${cityId}`);
     return res;
 }
 
-export const getPopular = async () => {
-    const res = await api.get("/rooms/popular");
+export const getPopular = async (cityId) => {
+    console.log(cityId)
+    const res = await api.get(`/rooms/popular?cityId=${cityId}`);
     return res;
 }
 
 export const getRegionRooms = async () => {
     const res = await api.get("/places/rooms");
+    return res;
+}
+
+export const getTemporaryUser = async (userId) => {
+    const res = await api.get(`/profile/${userId}/temporary`);
     return res;
 }

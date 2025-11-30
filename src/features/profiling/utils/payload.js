@@ -1,4 +1,6 @@
-export function buildProfilingPayload(profile, answers) {
+import { useAuth } from "../../../core/auth/useAuth";
+
+export function buildProfilingPayload(profile, answers, user) {
   const normalizedAnswers = (answers || [])
     .filter(Boolean)
     .map((a) => ({ id: a.id, answer: a.answer, category: a.category, type: a.type, question: a.statement }));
@@ -11,7 +13,7 @@ export function buildProfilingPayload(profile, answers) {
       occupation: profile.occupation,
       phoneNumber: profile.phoneNumber,
       bornDate: profile.bornDate,
-      email: profile.email,
+      email: profile.email || user?.data?.email,
     },
     answers: normalizedAnswers,
   };

@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { getCategories, getHighlights, getPopular, getRegionRooms } from "../api"
+import { getCategories, getHighlights, getPopular, getRegionRooms, getTemporaryUser } from "../api"
 
 export const useCategories = () => {
     return useQuery({
@@ -9,18 +9,18 @@ export const useCategories = () => {
     })
 }
 
-export const useHighlights = () => {
+export const useHighlights = (cityId) => {
     return useQuery({
-        queryKey: ["highlightsKey"],
-        queryFn: () => getHighlights(),
+        queryKey: ["highlightsKey", cityId],
+        queryFn: () => getHighlights(cityId),
         placeholderData: keepPreviousData,
     })
 }
 
-export const usePopular = () => {
+export const usePopular = (cityId) => {
     return useQuery({
-        queryKey: ["popularKey"],
-        queryFn: () => getPopular(),
+        queryKey: ["popularKey", cityId],
+        queryFn: () => getPopular(cityId),
         placeholderData: keepPreviousData,
     })
 }
@@ -30,5 +30,16 @@ export const useRegionRooms = () => {
         queryKey: ["regionsKey"],
         queryFn: () => getRegionRooms(),
         placeholderData: keepPreviousData,
+    })
+}
+
+export const useTemporaryUser = (userId, isAuthenticated) => {
+    console.log('userId', userId);
+    console.log('isAuthenticated', isAuthenticated);
+    return useQuery({
+        queryKey: ["temporaryUserKey", userId],
+        queryFn: () => getTemporaryUser(userId),
+        placeholderData: keepPreviousData,
+        enabled: (isAuthenticated === false && userId != null),
     })
 }

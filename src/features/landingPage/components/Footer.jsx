@@ -1,8 +1,12 @@
 import { Facebook, Globe, Instagram, Linkedin, Twitter, Youtube } from "lucide-react";
 import logo from "../../../assets/logo/main-logo-white.png";
-import qr from "../../../assets/logo/qr.svg";
+import qr from "../../../assets/logo/qr.jpeg";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../core/auth/useAuth";
 
 export const Footer = () => {
+    const navigate = useNavigate();
+    const { isAuthenticated } = useAuth();
     return (
         <div className="w-full">
             <div
@@ -91,10 +95,12 @@ export const Footer = () => {
                         </button>
 
                         <div className="flex items-center gap-4 sm:gap-4">
-                            <button onClick={() => navigate("/login")} className="rounded-xl px-4 py-2 bg-transparent border-2 border-black text-black font-semibold hover:bg-gray-800 hover:text-white cursor-pointer transition-all duration-150 text-sm" >
-                                Sign In
-                            </button>
-                            <button className="rounded-xl px-4 py-2 bg-black text-white font-semibold hover:bg-gray-800 cursor-pointer transition-all duration-150 text-sm" onClick={() => handleStartnow()} >
+                            {!isAuthenticated && (
+                                <button onClick={() => navigate("/login")} className="rounded-xl px-4 py-2 bg-transparent border-2 border-black text-black font-semibold hover:bg-gray-800 hover:text-white cursor-pointer transition-all duration-150 text-sm" >
+                                    Sign In
+                                </button>
+                            )}
+                            <button className="rounded-xl px-4 py-2 bg-black text-white font-semibold hover:bg-black cursor-pointer transition-all duration-150 text-sm" onClick={() => handleStartnow()} >
                                 Start Now
                             </button>
                         </div>

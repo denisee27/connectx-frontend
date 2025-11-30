@@ -10,9 +10,9 @@ export default function PublicRoute({ children }) {
     return <LoadingScreen />;
   }
 
-  // if (isAuthenticated) {
-  //   return <Navigate to="/admin" replace />;
-  // }
+  if (isAuthenticated) {
+    return <Navigate to="/home" replace />;
+  }
 
   return children ? children : <Outlet />;
 }

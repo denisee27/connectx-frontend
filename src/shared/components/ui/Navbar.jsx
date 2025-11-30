@@ -5,7 +5,8 @@ import { createPortal } from "react-dom";
 import { CalendarDays, LayoutDashboard, UserRound } from "lucide-react";
 import { useAuth } from "../../../core/auth/useAuth";
 import { useAuthStore } from "../../../features/auth/stores/authStore";
-import LoginModal from "../../../features/auth/components/LoginModal";
+import { LoginModal } from "../../../features/auth/components/LoginModal";
+import { env } from "../../../core/config/env";
 
 export default function NavbarMain({ user, onCreateEvent }) {
   const navigate = useNavigate();
@@ -15,8 +16,7 @@ export default function NavbarMain({ user, onCreateEvent }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoginOpen, setLoginOpen] = useState(false);
   const logout = useAuthStore((state) => state.logout);
-  const { isAuthenticated } = useAuth();
-  const { user: authUser } = useAuthStore((state) => state);
+  const { isAuthenticated, user: authUser } = useAuth();
 
   useEffect(() => {
     const onDocClick = (e) => {
@@ -58,24 +58,32 @@ export default function NavbarMain({ user, onCreateEvent }) {
           {/* Right: actions */}
 
           <div className="flex items-center gap-4">
+            <button
+              onClick={handleCreate}
+              className="cursor-pointer inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            >
+              Create Event
+            </button>
+
             {isAuthenticated && (
               <>
-                <button
-                  onClick={handleCreate}
-                  className="cursor-pointer inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                >
-                  Create Event
-                </button>
-
                 <button
                   onClick={() => setOpen((v) => !v)}
                   aria-haspopup="true"
                   aria-expanded={open}
-                  className="relative inline-flex items-center gap-2 rounded-full bg-gradient-to-tr from-primary to-secondary p-1.5 text-white shadow-sm ring-1 ring-white/20 transition-transform duration-200 hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="relative inline-flex items-center justify-center rounded-full transition-transform duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                 >
-                  <span className="grid h-7 w-7 place-items-center rounded-fulltext-lg">
-                    <UserRound />
-                  </span>
+                  {authUser?.data?.profilePictureUrl ? (
+                    <img
+                      src={env.VITE_API_BASE_URL + '/rooms/image/' + authUser?.data.profilePictureUrl}
+                      alt={authUser?.data?.name || "User"}
+                      className="h-10 w-10 rounded-full object-cover border-2 border-primary shadow-sm"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-primary to-secondary text-white shadow-sm border-2 border-white ring-1 ring-gray-200">
+                      <UserRound size={20} />
+                    </div>
+                  )}
                 </button>
               </>
             )}
@@ -95,12 +103,22 @@ export default function NavbarMain({ user, onCreateEvent }) {
                 }`}
             >
               <div className="flex items-center gap-3 rounded-xl bg-white/5 p-3">
-                <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-tr from-primary to-secondary text-lg">
-                  <UserRound />
+                <div className="shrink-0">
+                  {authUser?.data?.profilePictureUrl ? (
+                    <img
+                      src={env.VITE_API_BASE_URL + '/rooms/image/' + authUser?.data.profilePictureUrl}
+                      alt={authUser?.data?.name}
+                      className="h-10 w-10 rounded-full object-cover border border-white/20"
+                    />
+                  ) : (
+                    <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-tr from-primary to-secondary text-lg">
+                      <UserRound size={20} />
+                    </div>
+                  )}
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">{authUser?.data?.name || "Guest User"}</p>
-                  <p className="truncate text-xs text-gray-300">{authUser?.data?.email || "guest@example.com"}</p>
+                  <p className="truncate text-sm font-semibold">{authUser?.data?.name || authUser?.name || "Guest User"}</p>
+                  <p className="truncate text-xs text-gray-300">{authUser?.data?.email || authUser?.email || "guest@example.com"}</p>
                 </div>
               </div>
               <div className="mt-2">
@@ -144,7 +162,7 @@ function NavItem({ to, icon, label, end = false }) {
       end={end}
       className={({ isActive }) =>
         `cursor-pointer inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm transition-colors duration-200 ${isActive
-          ? "text-gray-900 underline underline-offset-4 decoration-2"
+          ? "text-primary underline underline-offset-4 decoration-2"
           : "text-gray-400 hover:text-gray-700"
         }`
       }

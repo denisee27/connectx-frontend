@@ -8,6 +8,8 @@ import { SyncLoader } from "react-spinners";
 import { useCategories } from "../../dashboard/hooks/useDashboard";
 import { useCountries } from "../../listEvent/hooks/useListEvent";
 import { useCities } from "../../profiling/hooks/useProfiling";
+import { useAuth } from "../../../core/auth/useAuth";
+import { LoginModal } from "../../auth/components/LoginModal";
 
 const LoadingIndicator = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-md transition-all">
@@ -47,6 +49,8 @@ export const NewEvent = () => {
     const [selectedCountry, setSelectedCountry] = useState("");
     const { data: categories = [], isLoading: isLoadingCategories } = useCategories();
     const { data: countries = [], isLoading: isLoadingCountries } = useCountries();
+    const { isAuthenticated } = useAuth();
+    const [showLoginModal, setShowLoginModal] = useState(false);
     const {
         data: cities,
         isLoading: isLoadingCities,
@@ -87,11 +91,11 @@ export const NewEvent = () => {
     const typeOptions = useMemo(
         () => [
             { key: "event", label: "Event", desc: "Tidak ada batas peserta" },
-            { key: "meetup", label: "Meetup", desc: "Maksimal 10 peserta" },
+            { key: "meetup", label: "Meetup", desc: "Maximum 20 participants" },
             {
                 key: "dinner",
                 label: "Dinner",
-                desc: "Acara makan bersama intim (max 4 orang)",
+                desc: "Intimate dinner gathering (max 6 people)",
             },
         ],
         []
@@ -107,7 +111,12 @@ export const NewEvent = () => {
         datetime: z.string().min(1, "Date & time is required"),
         categoryId: z.string().min(1, "Category is required"),
         countryId: z.string().min(1, "Country is required"),
-        cityId: z.string().min(1, "City is required"),
+        cityId: z
+            .string()
+            .min(1, "City is required")
+            .refine((val) => val !== "JAKARTA_CITY_ID" && !val.includes("_CITY_ID"), {
+                message: "Please select a valid city from the list",
+            }),
         locationDetail: z.string().min(10, "Please provide a clear location detail"),
         mapsUrl: z
             .string()
@@ -134,8 +143,13 @@ export const NewEvent = () => {
     });
 
     useEffect(() => {
-        getSessionId();
-    }, []);
+        if (!isAuthenticated) {
+            setShowLoginModal(true);
+        } else {
+            setShowLoginModal(false);
+            getSessionId();
+        }
+    }, [isAuthenticated]);
 
     const getSessionId = async () => {
         const id = await startSession();
@@ -285,6 +299,7 @@ export const NewEvent = () => {
             fd.append("title", form.title);
             fd.append("slug", slugifyTitle(form.title));
             fd.append("categoryId", form.categoryId);
+            fd.append("countryId", form.countryId);
             fd.append("cityId", form.cityId);
             fd.append("type", form.type || "");
             fd.append("placeName", form.place_name || "");
@@ -336,7 +351,7 @@ export const NewEvent = () => {
         }
     }, [input]);
 
-    if (isPendingSession || !sessionId) {
+    if (isAuthenticated && (isPendingSession || !sessionId)) {
         return <LoadingIndicator />;
     }
 
@@ -523,6 +538,9 @@ export const NewEvent = () => {
                                             ))
                                         )}
                                     </select>
+                                    {errors.countryId && (
+                                        <p className="mt-1 text-xs text-red-600">{errors.countryId}</p>
+                                    )}
                                 </div>
 
                                 {/* City */}
@@ -702,6 +720,19 @@ export const NewEvent = () => {
                     </div>
                 </div>
             )}
+            <SuccessModal
+                isOpen={showSuccessModal}
+                onClose={() => setShowSuccessModal(false)}
+                eventId={submitState === "success" ? "created" : null}
+            />
+
+            <LoginModal
+                isOpen={showLoginModal}
+                onClose={() => setShowLoginModal(navigate("/home"))}
+                onSuccess={() => {
+                    setShowLoginModal(false);
+                }}
+            />
         </div>
     );
 };
@@ -713,7 +744,7 @@ const ChatBubble = ({ role, text }) => {
         <div className={"flex " + (isUser ? "justify-end" : "justify-start")}>
             <div
                 className={
-                    (isUser ? "bg-accent text-black" : "bg-card text-foreground") +
+                    (isUser ? "bg-primary text-white" : "bg-card text-foreground") +
                     " max-w-[680px] rounded-3xl border border-border px-4 py-3 shadow-sm transition-all"
                 }
                 style={{
@@ -735,6 +766,31 @@ const ChatBubble = ({ role, text }) => {
             <style>{`
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: translateY(0) } }
       `}</style>
+        </div>
+    );
+};
+
+const SuccessModal = ({ isOpen, onClose, eventId }) => {
+    const navigate = useNavigate();
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+                <h3 className="text-lg font-bold">Success! Your event is ready.</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                    Event saved successfully. You can check the details and schedule below.
+                </p>
+                <div className="mt-4 flex justify-end gap-2">
+                    <button
+                        type="button"
+                        className="rounded-full bg-black px-4 py-2 text-sm font-semibold text-white"
+                        onClick={() => navigate("/home/schedule")}
+                    >
+                        Detail
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };

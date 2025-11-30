@@ -68,37 +68,37 @@ export default function ProtectedRoute({
   }
 
   // Check permissions if specified
-  let hasAccess = true;
+  // let hasAccess = true;
 
-  if (permission) {
-    hasAccess = can(permission);
-    if (!hasAccess) {
-      logger.warn("Access denied - missing permission", { permission });
-    }
-  } else if (permissions && Array.isArray(permissions)) {
-    hasAccess = requireAll ? hasAllPermissions(permissions) : hasAnyPermission(permissions);
-    if (!hasAccess) {
-      logger.warn("Access denied - missing permissions", { permissions, requireAll });
-    }
-  }
+  // if (permission) {
+  //   hasAccess = can(permission);
+  //   if (!hasAccess) {
+  //     logger.warn("Access denied - missing permission", { permission });
+  //   }
+  // } else if (permissions && Array.isArray(permissions)) {
+  //   hasAccess = requireAll ? hasAllPermissions(permissions) : hasAnyPermission(permissions);
+  //   if (!hasAccess) {
+  //     logger.warn("Access denied - missing permissions", { permissions, requireAll });
+  //   }
+  // }
 
   // Check roles if specified
-  if (hasAccess && role) {
-    hasAccess = hasRole(role, exactRole);
-    if (!hasAccess) {
-      logger.warn("Access denied - insufficient role", { requiredRole: role, exactRole });
-    }
-  } else if (hasAccess && roles && Array.isArray(roles)) {
-    hasAccess = hasAnyRole(roles, exactRole);
-    if (!hasAccess) {
-      logger.warn("Access denied - insufficient roles", { requiredRoles: roles, exactRole });
-    }
-  }
+  // if (hasAccess && role) {
+  //   hasAccess = hasRole(role, exactRole);
+  //   if (!hasAccess) {
+  //     logger.warn("Access denied - insufficient role", { requiredRole: role, exactRole });
+  //   }
+  // } else if (hasAccess && roles && Array.isArray(roles)) {
+  //   hasAccess = hasAnyRole(roles, exactRole);
+  //   if (!hasAccess) {
+  //     logger.warn("Access denied - insufficient roles", { requiredRoles: roles, exactRole });
+  //   }
+  // }
 
   // Redirect to 403 if access denied
-  if (!hasAccess) {
-    return <Navigate to="/forbidden" replace />;
-  }
+  // if (!hasAccess) {
+  //   return <Navigate to="/forbidden" replace />;
+  // }
 
   // Render children or outlet
   return children ? children : <Outlet />;

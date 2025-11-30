@@ -27,6 +27,9 @@ import Questioner from "../../features/profiling/pages/Questioner.jsx";
 import Preference from "../../features/profiling/pages/Preference.jsx";
 import Suggestion from "../../features/profiling/pages/Suggestion.jsx";
 import VerifyEmailPage from "../../features/auth/pages/verifyEmailPage.jsx";
+import PaymentStatus from "../../features/paymentStatus/pages/PaymentStatus.jsx";
+import ProtectedRoute from "../../shared/components/guards/ProtectedRoute.jsx";
+import ResetPasswordPage from "../../features/auth/pages/ResetPassword.jsx";
 const DashboardLazy = lazy(() => import("../../features/dashboard/pages/Dashboard.jsx"));
 
 const RootLayout = () => (
@@ -41,38 +44,50 @@ export const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       {
-        element: <PublicRoute />,
         children: [
-          { path: "/login", element: <LoginPage /> },
+          {
+            element: <PublicRoute />,
+            children: [
+              { path: "/login", element: <LoginPage /> },
+              { path: "/register", element: <RegisterPage /> },
+              { path: "/forgot-password", element: <ForgotPasswordPage /> },
+              { path: "/verify", element: <VerifyEmailPage /> },
+              { path: "/reset-password", element: <ResetPasswordPage /> },
+              { path: "/reset-password/:token:email", element: <ResetPasswordPage /> },
+            ]
+          },
           { path: "/", element: <MainPage /> },
-          { path: "/register", element: <RegisterPage /> },
-          { path: "/forgot-password", element: <ForgotPasswordPage /> },
-          { path: "/verify", element: <VerifyEmailPage /> },
           { path: "/profiling/questioner", element: <Questioner /> },
           { path: "/profiling/preference", element: <Preference /> },
           { path: "/profiling/form", element: <FormProfile /> },
           { path: "/profiling/suggestion", element: <Suggestion /> },
         ],
       },
+
       {
         path: "/forbidden",
         element: <ForbiddenPage />,
       },
       {
         path: "/home",
-        // element: <ProtectedRoute />,
         children: [
           {
             element: <MainLayout />,
             children: [
+              {
+                element: <ProtectedRoute />,
+                children: [
+                  { path: "profile", element: <Profile /> },
+                  { path: "schedule", element: <Schedule /> },
+                  { path: "setting", element: <Setting /> },
+                  { path: "payment-status", element: <PaymentStatus /> },
+                ]
+              },
               { index: true, element: <Dashboard /> },
-              { path: "profile", element: <Profile /> },
               { path: "new-event", element: <NewEvent /> },
               { path: "list-event", element: <ListEvent /> },
               { path: "category/:slug", element: <DetailCategory /> },
-              { path: "setting", element: <Setting /> },
               { path: "event/:slug", element: <Event /> },
-              { path: "schedule", element: <Schedule /> },
             ],
           },
         ],

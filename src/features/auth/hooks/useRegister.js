@@ -18,7 +18,6 @@ export const useRegister = () => {
         "Registration successful! You can now log in.";
       showSuccess(message);
       logger.info("Registration completed, redirecting to login");
-      navigate("/login", { replace: true });
     },
     onError: (error) => {
       logger.warn("Registration failed", error);

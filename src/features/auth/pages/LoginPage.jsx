@@ -70,13 +70,24 @@ export default function LoginPage() {
             >
               {isPending ? "Logging in..." : "Login"}
             </button>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => navigate("/")}
+              className="w-full rounded-md mt-4 px-4 py-2 text-primary cursor-pointer hover:bg-secondary hover:text-white bg-white border border-primary font-semibold hover:bg-primary-dark-color disabled:opacity-50 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-color"
+            >
+              {isPending ? "Waiting for response..." : "Back to home"}
+            </button>
           </form>
           <div className="flex justify-between mt-4 text-sm">
-            <Link to={"/"} className="font-medium text-primary-color hover:text-primary-dark-color">
-              See how it works.
+            <div className="text-gray-900">
+              Don't have an account? <Link to="/register" className="font-medium text-primary hover:text-secondary">Sign up</Link>
+            </div>
+            <Link to={"/forgot-password"} className="font-medium text-primary-color hover:text-primary-dark-color">
+              Forgot Password
             </Link>
-            {/* <Link to={"/forgetPassword"} className="font-medium text-primary-color hover:text-primary-dark-color">
-              Forgot password?
+            {/* <Link to={"/"} className="font-medium text-primary-color hover:text-primary-dark-color">
+              See how it works.
             </Link> */}
           </div>
         </div>
