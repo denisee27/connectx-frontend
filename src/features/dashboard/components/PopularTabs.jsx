@@ -26,7 +26,7 @@ export default function PopularTabs({ tabs, active, onChange }) {
           onClick={() => onChange?.(t.key)}
           aria-selected={active === t.key}
           className={
-            "flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 " +
+            "flex shrink-0 cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 " +
             (active === t.key
               ? "bg-primary text-white shadow-md scale-105"
               : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900")

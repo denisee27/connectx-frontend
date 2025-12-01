@@ -262,7 +262,7 @@ export default function Event() {
                             Hosted by
                           </p>
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-foreground truncate">
+                            <span className="capitalize font-semibold text-foreground truncate">
                               {event.createdBy.name}
                             </span>
                             {event.createdBy.mbti && (
@@ -348,7 +348,14 @@ export default function Event() {
                           />
 
                           {/* Tooltip */}
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 bg-popover text-popover-foreground text-sm rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none border border-border scale-95 group-hover:scale-100 origin-bottom">
+                          <div className={`absolute bottom-full mb-3 w-64 p-4 bg-popover text-popover-foreground text-sm rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none border border-border scale-95 group-hover:scale-100 origin-bottom z-50 ${
+                            // Adjust position based on index to prevent overflow
+                            i === 0 ? 'left-0' :
+                              i === 1 ? 'left-0 sm:-left-8' :
+                                i === 2 ? 'left-0 sm:-left-16' :
+                                  i === 3 ? 'left-0 sm:-left-24' :
+                                    'left-1/2 -translate-x-1/2'
+                            }`}>
                             <div className="flex items-center justify-between mb-2">
                               <span className="font-bold truncate pr-2">{p.user.name}</span>
                               {p.user.mbti && (
@@ -363,7 +370,14 @@ export default function Event() {
                               </p>
                             )}
                             {/* Arrow */}
-                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-popover drop-shadow-sm"></div>
+                            <div className={`absolute top-full border-8 border-transparent border-t-popover drop-shadow-sm ${
+                              // Adjust arrow position to match the tooltip offset
+                              i === 0 ? 'left-6' :
+                                i === 1 ? 'left-6 sm:left-12' :
+                                  i === 2 ? 'left-6 sm:left-20' :
+                                    i === 3 ? 'left-6 sm:left-28' :
+                                      'left-1/2 -translate-x-1/2'
+                              }`}></div>
                           </div>
                         </div>
                       ))}

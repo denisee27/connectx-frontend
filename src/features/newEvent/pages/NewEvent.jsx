@@ -309,7 +309,7 @@ export const NewEvent = () => {
             fd.append("gmaps", form.mapsUrl || "");
             const maxP =
                 Number(form.max_participant) ||
-                (form.type === "event" ? 0 : form.type === "meetup" ? 10 : form.type === "dinner" ? 4 : 0);
+                (form.type === "event" ? 0 : form.type === "meetup" ? 20 : form.type === "dinner" ? 6 : 0);
             fd.append("maxParticipant", String(maxP));
 
             const res = await createRoom(fd);
@@ -671,7 +671,7 @@ export const NewEvent = () => {
                                     <button
                                         type="submit"
                                         disabled={isPendingCreateRoom}
-                                        className="hover:cursor-pointer rounded-full bg-black px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-foreground"
+                                        className="hover:cursor-pointer rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-secondary"
                                     >
                                         {isPendingCreateRoom ? "Creating..." : "Create Event"}
                                     </button>
@@ -784,7 +784,7 @@ const SuccessModal = ({ isOpen, onClose, eventId }) => {
                 <div className="mt-4 flex justify-end gap-2">
                     <button
                         type="button"
-                        className="rounded-full bg-black px-4 py-2 text-sm font-semibold text-white"
+                        className="rounded-full bg-primary hover:bg-secondary px-4 py-2 text-sm font-semibold text-white"
                         onClick={() => navigate("/home/schedule")}
                     >
                         Detail
