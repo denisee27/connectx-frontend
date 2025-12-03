@@ -65,7 +65,7 @@ export const NewEvent = () => {
     const [messages, setMessages] = useState([
         {
             role: "assistant",
-            text: "Hi there! Tell me what kind of event you have in mind. I'm here to help you plan a truly memorable experience! ✨",
+            text: "Hi there! Tell me what kind of event you have in mind. I'm here to help you plan a truly memorable experience! ✨\n\n\n## 📅 Let's Get Your Event Planned!\n\nTo help me structure your perfect event, could you please tell me the following details:\n\n1.  **What's the name of your awesome event?** (e.g., *Team Sync-Up*)\n2.  **What's the maximum number of people attending?** (Just a number, e.g., *8*)\n3.  **When exactly will it be?** (Please include the day, date, and time, e.g., *Friday, December 12, 2025, at 10:00 AM WIB*)\n4.  **Where will it take place?** (e.g., *Sampoerna Strategic, Jakarta*)\n5.  **Give me a quick description!** (e.g., *A routine brief team discussion for progress updates.*)\n\n\n### 💡 Tip: Copy-Paste Format\n\nFor the fastest way, simply copy-paste this format and fill in the blanks:\n\n* Event Name: **[Your Event Name]**\n* Max Participants: **[Number]**\n* Date & Time: **[Day, Date, and Time]**\n* Location: **[Venue or Address]**\n* Description: **[Short Description]**\n\n\n---\n*P.S. Feel free to use your own language to easily describe your event.*",
         },
     ]);
     const [input, setInput] = useState("");
@@ -80,7 +80,7 @@ export const NewEvent = () => {
         type: "",
         max_participant: "",
         place_name: "",
-        reserve_information: "",
+        reservation_information: "",
         cityId: "",
         countryId: "",
         categoryId: "",
@@ -160,6 +160,7 @@ export const NewEvent = () => {
 
 
     useEffect(() => {
+        useAuthStore.getState().getMe(false);
         if (!isAuthenticated) {
             setShowLoginModal(true);
         } else {
@@ -320,6 +321,7 @@ export const NewEvent = () => {
             fd.append("cityId", form.cityId);
             fd.append("type", form.type || "");
             fd.append("placeName", form.place_name || "");
+            fd.append("reservationInformation", form.reservation_information || "");
             fd.append("description", form.description || "");
             fd.append("datetime", new Date(form.datetime).toISOString());
             fd.append("address", form.locationDetail || "");
@@ -566,8 +568,8 @@ export const NewEvent = () => {
                                     <label className="text-sm font-medium">Reserve Information</label>
                                     <textarea
                                         rows={3}
-                                        value={form.reserve_information}
-                                        onChange={(e) => setForm({ ...form, reserve_information: e.target.value })}
+                                        value={form.reservation_information}
+                                        onChange={(e) => setForm({ ...form, reservation_information: e.target.value })}
                                         className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 shadow-sm focus:outline-none"
                                         placeholder="Contact or reservation instructions"
                                     />
@@ -853,7 +855,7 @@ const BankInfoModal = ({ isOpen, onClose, onSuccess, updateBankProfile }) => {
                                 className="w-full rounded-xl border border-border bg-white px-3 py-2 shadow-sm focus:outline-none appearance-none"
                             >
                                 <option value="">Select Bank</option>
-                                {["BCA", "MANDIRI", "BRI", "BNI"].map((bank) => (
+                                {["BCA", "MANDIRI", "BRI", "BNI", "CIMB", "BSI", "PERMATA", "JENIUS", "JAGO"].map((bank) => (
                                     <option key={bank} value={bank}>{bank}</option>
                                 ))}
                             </select>

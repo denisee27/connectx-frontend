@@ -16,31 +16,17 @@ const labelDay = (iso) => {
 
 function HeaderSection({ title, description, latitude, longitude, countryName }) {
 
-    // Fungsi untuk membersihkan data input yang kotor
     const cleanCoordinate = (val, type) => {
         if (!val) return 0;
-
-        // 1. Bersihkan jika ada text aneh (misal: "31 106.82" -> ambil yg belakang atau format ulang)
-        // Kita ubah ke string dulu, lalu parse ulang
         let strVal = String(val).trim();
-
-        // Jika inputnya seperti "31 106.82", kita coba ambil angka terakhir yang masuk akal
-        // atau langsung parseFloat. 
         let num = parseFloat(strVal);
 
-        // 2. Logika Normalisasi (Perbaikan untuk kasus -61.75 Jakarta)
         const max = type === 'lat' ? 90 : 180;
 
-        // Loop pembagian standar
         while (Math.abs(num) > max && num !== 0) {
             num /= 10;
         }
 
-        // HACK KHUSUS: Jika ini Jakarta (indonesia) tapi angkanya puluhan (misal -61),
-        // kemungkinan besar data source-nya salah koma. 
-        // Latitude Jakarta itu sekitar -6, bukan -61.
-        // Kita paksa bagi 10 lagi jika user berada di Indonesia dan latitudenya > 10 atau < -10
-        // (Ini optional, tapi solusi cepat untuk data Anda yang -61.75)
         if (type === 'lat' && Math.abs(num) > 15 && countryName?.toLowerCase() === 'indonesia') {
             num /= 10;
         }
@@ -51,11 +37,6 @@ function HeaderSection({ title, description, latitude, longitude, countryName })
     const lat = cleanCoordinate(latitude, 'lat');
     const lng = cleanCoordinate(longitude, 'lng');
 
-    // URL Peta yang BENAR
-    // Menggunakan https://maps.google.com/maps
-    // Parameter q = query (koordinat)
-    // Parameter z = zoom
-    // Parameter output = embed (tampilan iframe)
     const mapSrc = `https://maps.google.com/maps?q=${lat},${lng}&z=12&output=embed`;
 
     return (

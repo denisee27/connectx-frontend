@@ -2,10 +2,10 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getAllCategories, getAllEvent, getCountries } from "../api";
 
 export const useListEvent = (filters = {}, options = {}) => {
-    const { page = 1, limit = 10, title = '', categories = [], sort = 'datetime_asc', country = '' } = filters;
+    const { page = 1, limit = 10, title = '', categories = [], sort = 'datetime_asc', country = '', paymentType = '' } = filters;
     return useQuery({
-        queryKey: ["listEventKey", page, limit, title, categories, sort, country],
-        queryFn: () => getAllEvent({ page, limit, title, categories, sort, country }),
+        queryKey: ["listEventKey", page, limit, title, categories, sort, country, paymentType],
+        queryFn: () => getAllEvent({ page, limit, title, categories, sort, country, paymentType }),
         placeholderData: keepPreviousData,
         ...options,
     });

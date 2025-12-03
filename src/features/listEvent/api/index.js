@@ -1,6 +1,6 @@
 import api from "../../../core/api";
 
-export const getAllEvent = async ({ page = 1, limit = 10, title = '', categories = '', sort = 'datetime_asc', country = '' }) => {
+export const getAllEvent = async ({ page = 1, limit = 10, title = '', categories = '', sort = 'datetime_asc', country = '', paymentType = '' }) => {
     const params = new URLSearchParams({
         page,
         limit,
@@ -15,6 +15,9 @@ export const getAllEvent = async ({ page = 1, limit = 10, title = '', categories
     }
     if (country) {
         params.append('country', country);
+    }
+    if (paymentType) {
+        params.append('paymentType', paymentType);
     }
 
     const res = await api.getPaginated(`/rooms?${params.toString()}`);

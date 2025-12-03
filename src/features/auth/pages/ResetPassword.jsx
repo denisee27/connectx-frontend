@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useResetPassword } from "../hooks/useResetPassword";
 import { resetPasswordSchema } from "../utils/validation";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function ResetPasswordPage() {
     const { token: tokenParam } = useParams();
@@ -12,6 +13,8 @@ export default function ResetPasswordPage() {
     const resetToken = tokenParam || tokenFromQuery || "";
 
     const [serverError, setServerError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const { mutate: performReset, isPending, error } = useResetPassword();
 
@@ -79,12 +82,21 @@ export default function ResetPasswordPage() {
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                         <div>
                             <label className="block text-sm font-medium text-gray-700">New Password</label>
-                            <input
-                                {...register("password")}
-                                type="password"
-                                className="mt-1 h-10 w-full rounded-md border border-gray-300 px-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                placeholder="Enter new password"
-                            />
+                            <div className="relative">
+                                <input
+                                    {...register("password")}
+                                    type={showPassword ? "text" : "password"}
+                                    className="mt-1 h-10 w-full rounded-md border border-gray-300 px-3 pr-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                    placeholder="Enter new password"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 mt-1 focus:outline-none"
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
                             {errors.password && (
                                 <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
                             )}
@@ -92,12 +104,21 @@ export default function ResetPasswordPage() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
-                            <input
-                                {...register("confirmPassword")}
-                                type="password"
-                                className="mt-1 h-10 w-full rounded-md border border-gray-300 px-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                placeholder="Re-enter new password"
-                            />
+                            <div className="relative">
+                                <input
+                                    {...register("confirmPassword")}
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    className="mt-1 h-10 w-full rounded-md border border-gray-300 px-3 pr-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                    placeholder="Re-enter new password"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 mt-1 focus:outline-none"
+                                >
+                                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
                             {errors.confirmPassword && (
                                 <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
                             )}

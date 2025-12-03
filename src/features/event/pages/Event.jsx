@@ -302,7 +302,7 @@ export default function Event() {
                     </div>
                   )}
 
-                  {!event.isCreator && !event.isJoining && remainingSpots <= 5 && remainingSpots > 0 && (
+                  {!event?.isCreator && !event.isJoining && remainingSpots <= 5 && remainingSpots > 0 && (
                     <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-orange-800">
                       <div className="flex items-start gap-3">
                         <AlertTriangle className="mt-0.5 shrink-0 text-orange-600" size={20} />

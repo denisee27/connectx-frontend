@@ -5,10 +5,17 @@ import { useDebounce } from '../../../shared/hooks/useDebounce';
 import { ChevronDown, Check } from 'lucide-react';
 import { useCategories, useCountries } from '../hooks/useListEvent';
 
+const paymentTypes = [
+  { id: null, name: 'All Prices' },
+  { id: 'free', name: 'Free' },
+  { id: 'paid', name: 'Paid' }
+];
+
 export default function EventFilter({ onFilterChange }) {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedPaymentType, setSelectedPaymentType] = useState(paymentTypes[0]);
   const [sort, setSort] = useState('datetime_asc');
 
   const debouncedSearch = useDebounce(search, 300);
@@ -22,9 +29,10 @@ export default function EventFilter({ onFilterChange }) {
       title: debouncedSearch,
       categories: selectedCategory?.id,
       country: debouncedSelectedCountry?.id,
+      paymentType: selectedPaymentType?.id,
       sort: sort,
     });
-  }, [debouncedSearch, selectedCategory, debouncedSelectedCountry, sort, onFilterChange]);
+  }, [debouncedSearch, selectedCategory, debouncedSelectedCountry, selectedPaymentType, sort, onFilterChange]);
 
   return (
     <div className="p-4 bg-gray-50 rounded-lg shadow-md mb-6">
@@ -128,6 +136,50 @@ export default function EventFilter({ onFilterChange }) {
                     </Listbox.Option>
                   ))
                 )}
+              </Listbox.Options>
+            </div>
+          </Listbox>
+        </div>
+
+        {/* Payment Type Filter */}
+        <div>
+          <label htmlFor="paymentType" className="block text-sm font-medium text-gray-700">Payment Type</label>
+          <Listbox value={selectedPaymentType} onChange={setSelectedPaymentType}>
+            <div className="relative mt-1">
+              <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm h-12">
+                <span className="block truncate my-auto">
+                  {selectedPaymentType?.name}
+                </span>
+                <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                  <ChevronDown />
+                </span>
+              </Listbox.Button>
+              <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                {paymentTypes.map((type) => (
+                  <Listbox.Option
+                    key={type.id || 'all'}
+                    className={({ active }) =>
+                      `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-amber-100 text-amber-900' : 'text-gray-900'
+                      }`
+                    }
+                    value={type}
+                  >
+                    {({ selected }) => (
+                      <>
+                        <span
+                          className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}
+                        >
+                          {type.name}
+                        </span>
+                        {selected ? (
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
+                            <Check className="h-5 w-5" aria-hidden="true" />
+                          </span>
+                        ) : null}
+                      </>
+                    )}
+                  </Listbox.Option>
+                ))}
               </Listbox.Options>
             </div>
           </Listbox>

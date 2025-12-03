@@ -34,7 +34,7 @@ function MainPage() {
             <div id="how-it-works">
                 <HowItWorks />
             </div>
-            <Footer />
+            <Footer scrollToElement={scrollToElement} />
         </div>
     )
 }

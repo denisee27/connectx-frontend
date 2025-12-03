@@ -4,10 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "react-router-dom";
 import { loginSchema } from "../utils/validation";
 import { useLogin } from "../hooks/useLogin";
+import { Eye, EyeOff } from "lucide-react";
 
 export function LoginModal({ isOpen, onClose, onSuccess }) {
   const { mutate: performLogin, isPending } = useLogin();
   const [serverError, setServerError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -55,12 +57,21 @@ export function LoginModal({ isOpen, onClose, onSuccess }) {
             </div>
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700">Password</label>
-              <input
-                {...register("password")}
-                type="password"
-                placeholder="Enter your password"
-                className="px-3 py-2 mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-primary focus:ring-primary outline-none transition-all"
-              />
+              <div className="relative">
+                <input
+                  {...register("password")}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  className="px-3 py-2 mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-primary focus:ring-primary outline-none transition-all pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 mt-1 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
               )}
@@ -82,10 +93,12 @@ export function LoginModal({ isOpen, onClose, onSuccess }) {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-500">
-            Don't have an account?{" "}
-            <Link to="/register" className="font-medium text-primary hover:underline">
-              Sign up
+          <div className="flex justify-between mt-4 text-sm">
+            <div className="text-gray-900">
+              Don't have an account? <Link to="/register" className="font-medium text-primary hover:text-secondary">Sign up</Link>
+            </div>
+            <Link to={"/forgot-password"} className="font-medium text-primary-color hover:text-primary-dark-color">
+              Forgot Password
             </Link>
           </div>
         </div>

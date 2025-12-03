@@ -9,6 +9,7 @@ import { z } from "zod";
 import { useCities, useCountries } from "../../profiling/hooks/useProfiling";
 import { useRegister } from "../hooks/useRegister";
 import logger from "../../../core/utils/logger";
+import { Eye, EyeOff } from "lucide-react";
 
 function SuccessModal({ isOpen, onDone }) {
   if (!isOpen) return null;
@@ -79,6 +80,8 @@ export default function RegisterPage() {
   const [serverError, setServerError] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { data: countries, isLoading: isLoadingCountries, isError: isErrorCountries } = useCountries();
   const { data: cities, isLoading: isLoadingCities, isError: isErrorCities } = useCities(selectedCountry);
   const { mutateAsync: registerUser, isPending } = useRegister();
@@ -256,22 +259,40 @@ export default function RegisterPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Password</label>
-                <input
-                  {...register("password")}
-                  type="password"
-                  placeholder="********"
-                  className="px-2 mt-1 h-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-color focus:ring-primary-color"
-                />
+                <div className="relative">
+                  <input
+                    {...register("password")}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="********"
+                    className="px-2 mt-1 h-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-color focus:ring-primary-color pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 mt-1 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
                 {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
-                <input
-                  {...register("confirmPassword")}
-                  type="password"
-                  placeholder="********"
-                  className="px-2 mt-1 h-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-color focus:ring-primary-color"
-                />
+                <div className="relative">
+                  <input
+                    {...register("confirmPassword")}
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="********"
+                    className="px-2 mt-1 h-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-color focus:ring-primary-color pr-10 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 mt-1"
+                  >
+                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
                 {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>}
               </div>
             </div>

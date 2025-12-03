@@ -22,6 +22,7 @@ export const ListEvent = () => {
             title: filters.title,
             categories: filters.categories,
             country: filters.country,
+            paymentType: filters.paymentType,
             sort: filters.sort,
         };
     }, [page, limit, filters]);

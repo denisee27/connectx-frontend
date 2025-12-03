@@ -94,9 +94,17 @@ function ProgressBar({ current, total }) {
 
 export default function Questioner() {
     const navigate = useNavigate();
-    const { data: questionsData, isPending: isPendingQuestions, error: questionsError } = useQuestions();
+    const { data: questionsData, isPending: isPendingQuestions, error: questionsError, refetch } = useQuestions();
     const questions = useMemo(() => questionsData?.data?.mbti_questions || [], [questionsData]);
     const { isAuthenticated } = useAuth();
+
+    // Validate question count and refetch if needed
+    useEffect(() => {
+        if (!isPendingQuestions && !questionsError && questions.length > 0 && questions.length < 10) {
+            console.warn("Received fewer than 10 questions. Refetching...");
+            refetch();
+        }
+    }, [questions, isPendingQuestions, questionsError, refetch]);
 
     const total = questions.length;
     const [index, setIndex] = useState(0);
@@ -184,7 +192,7 @@ export default function Questioner() {
 
             // Validation: Ensure all 10 questions are answered
             if (answered.length !== 10) {
-                throw new Error(`Please answer all 10 questions. You have answered ${answered.length}.`);
+                throw new Error(`Please answer all 10 questions. You have answered ${answered10.length}.`);
             }
 
             if (answered.length !== total) { // Use total instead of QUESTIONS.length
