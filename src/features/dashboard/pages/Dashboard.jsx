@@ -32,8 +32,8 @@ function DashboardContent({ initial }) {
   const queryClient = useQueryClient();
 
   const { data: categories = [], isPending: isPendingCategory } = useCategories();
-  const { data: highlights = [], isPending: isPendingHighlights } = useHighlights(user?.data?.city?.id);
-  const { data: popular = null, isPending: isPendingPopular } = usePopular(user?.data?.city?.id);
+  const { data: highlights = [], isPending: isPendingHighlights } = useHighlights(user?.city?.id);
+  const { data: popular = null, isPending: isPendingPopular } = usePopular(user?.city?.id);
   const { data: regions = [], isPending: isPendingRegions } = useRegionRooms();
   const { data: temporaryUser = {}, isPending: isPendingTemporaryUser } = useTemporaryUser(localStorage.getItem("uid"), isAuthenticated);
 
@@ -172,7 +172,7 @@ function DashboardContent({ initial }) {
         <div className="mt-14">
           <SectionHeader
             title="Trending Now"
-            subtitle={user?.data?.city?.name}
+            subtitle={user?.city?.name}
             action={<PopularTabs tabs={popularTabs} active={popularActive} onChange={setPopularActive} />}
           />
           {isPendingPopular || isLoadingTab ? (

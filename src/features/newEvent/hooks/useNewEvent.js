@@ -1,5 +1,5 @@
 import { useCreateMutation } from "../../../core/queries/mutationHelpers";
-import { createRoom, getSessionChat, sendMessage } from "../api/api";
+import { createRoom, getSessionChat, sendMessage, updateBankProfile } from "../api/api";
 
 export const useGetSessionChat = () => {
     return useCreateMutation({
@@ -21,6 +21,14 @@ export const useCreateRoom = () => {
     return useCreateMutation({
         queryKey: ["createRoom"],
         mutationFn: (roomData) => createRoom(roomData),
+        showSuccessToast: true,
+    });
+}
+
+export const useUpdateBankProfile = () => {
+    return useCreateMutation({
+        queryKey: ["updateBankProfile"],
+        mutationFn: (data) => updateBankProfile(data),
         showSuccessToast: true,
     });
 }

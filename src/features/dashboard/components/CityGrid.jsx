@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import EventCard from "./EventCard.jsx";
+import { useNavigate } from "react-router-dom";
 
 function Tab({ label, active, onClick }) {
   return (
@@ -20,9 +21,10 @@ function Tab({ label, active, onClick }) {
   );
 }
 
-function CityItem({ name, abbr, count, colorClass }) {
+function CityItem({ id, name, slug, abbr, count, colorClass }) {
+  const navigate = useNavigate();
   return (
-    <div className="flex text-start items-center gap-4 rounded-lg border border-gray-200 bg-white p-3 transition-shadow hover:shadow-sm">
+    <div onClick={() => navigate(`city/${slug || id}`)} className="cursor-pointer flex text-start items-center gap-4 rounded-lg border border-gray-200 bg-white p-3 transition-shadow hover:shadow-sm">
       <div
         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white ${colorClass}`}
       >
@@ -67,7 +69,7 @@ export default function CityGrid({ regions, initialActive = "Asia" }) {
             <Tab key={t.key} label={t.label} active={t.key === active} onClick={() => setActive(t.key)} />
           ))
         ) : (
-          <div className="text-sm text-gray-500">Tidak ada region tersedia</div>
+          <div className="text-sm text-gray-500">No region available</div>
         )}
       </div>
 
@@ -78,8 +80,10 @@ export default function CityGrid({ regions, initialActive = "Asia" }) {
           {activeRegion?.cities?.length ? (
             activeRegion.cities.map((city, i) => (
               <CityItem
+                id={city.id}
                 key={city.name}
                 name={city.name}
+                slug={city.slug}
                 abbr={city.abbr}
                 count={city.count}
                 colorClass={accentColors[i % accentColors.length]}

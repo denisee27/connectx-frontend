@@ -30,6 +30,7 @@ import VerifyEmailPage from "../../features/auth/pages/verifyEmailPage.jsx";
 import PaymentStatus from "../../features/paymentStatus/pages/PaymentStatus.jsx";
 import ProtectedRoute from "../../shared/components/guards/ProtectedRoute.jsx";
 import ResetPasswordPage from "../../features/auth/pages/ResetPassword.jsx";
+import DetailCity from "../../features/detailCity/pages/DetailCity.jsx";
 const DashboardLazy = lazy(() => import("../../features/dashboard/pages/Dashboard.jsx"));
 
 const RootLayout = () => (
@@ -87,6 +88,7 @@ export const router = createBrowserRouter([
               { path: "new-event", element: <NewEvent /> },
               { path: "list-event", element: <ListEvent /> },
               { path: "category/:slug", element: <DetailCategory /> },
+              { path: "city/:slug", element: <DetailCity /> },
               { path: "event/:slug", element: <Event /> },
             ],
           },

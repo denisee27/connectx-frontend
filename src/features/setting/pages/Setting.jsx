@@ -17,7 +17,7 @@ import { QueryClient, useQueryClient } from "@tanstack/react-query";
  * - Styling mengikuti theme kelas yang sudah digunakan di project
  */
 export const Setting = () => {
-    const { data: userData, isPending } = useProfile();
+    const { data: userData, isPending, refetch } = useProfile();
     const getMe = useAuthStore((state) => state.getMe);
     const queryClient = useQueryClient();
     const [avatarFile, setAvatarFile] = useState(null);
@@ -32,6 +32,8 @@ export const Setting = () => {
     const [preferences, setPreferences] = useState([]);
     const [prefInput, setPrefInput] = useState("");
     const [selectedCountry, setSelectedCountry] = useState("");
+    const [bankAccount, setBankAccount] = useState("");
+    const [bankName, setBankName] = useState("");
 
     const { data: countries = [], isLoading: isLoadingCountries } = useCountries();
     const { data: cities, isLoading: isLoadingCities, isError: isErrorCities } = useCities(selectedCountry);
@@ -54,9 +56,7 @@ export const Setting = () => {
     const fileInputRef = useRef(null);
 
     const updateUser = useUpdateUser();
-
     const passwordSectionVisible = currentPassword.length > 0;
-
     const acceptTypes = useMemo(() => ["image/jpeg", "image/png"], []);
 
     const handleAvatarChange = (e) => {
@@ -102,6 +102,8 @@ export const Setting = () => {
         setSelectedCountry(initialCountryId);
         setCityId(initialCityId);
         setPreferences(Array.isArray(userData?.preferences) ? userData.preferences : []);
+        setBankAccount(userData?.bankAccount || "");
+        setBankName(userData?.bankName || "");
 
         // Format bornDate to YYYY-MM-DD for input[type="date"]
         if (userData?.bornDate) {
@@ -183,6 +185,12 @@ export const Setting = () => {
         if (!cityId) next.cityId = "City is required";
         if (preferences.length > 5) next.preferences = "Maximum 5 preferences allowed";
 
+        // Bank validation: if either is filled, both are required
+        if (bankName || bankAccount) {
+            if (!bankName) next.bankName = "Bank Name is required if Bank Account is filled";
+            if (!bankAccount) next.bankAccount = "Bank Account is required if Bank Name is filled";
+        }
+
         if (currentPassword) {
             if (!validateStrongPassword(currentPassword))
                 next.currentPassword = "Current password must be at least 8 characters";
@@ -236,6 +244,8 @@ export const Setting = () => {
                     countryId: countryId || undefined,
                     cityId: cityId || undefined,
                     bornDate: bornDate ? new Date(bornDate).toISOString() : undefined,
+                    bankAccount: bankAccount || undefined,
+                    bankName: bankName || undefined,
                     // Preferences: hanya string inputan user
                     preferences: Array.isArray(preferences)
                         ? preferences
@@ -251,6 +261,7 @@ export const Setting = () => {
                 };
 
                 await updateProfile(payload);
+                refetch();
                 getMe();
             }
 
@@ -434,6 +445,39 @@ export const Setting = () => {
                         />
                     </FormField>
 
+                    {/* Bank Info */}
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <FormField label="Bank Name" error={errors.bankName}>
+                            <div className="relative">
+                                <select
+                                    value={bankName}
+                                    onChange={(e) => setBankName(e.target.value)}
+                                    className="mt-1 w-full rounded-2xl border border-border bg-white px-3 py-2 shadow-sm focus:outline-none appearance-none"
+                                >
+                                    <option value="">Select Bank</option>
+                                    {["BCA", "MANDIRI", "BRI", "BNI"].map((bank) => (
+                                        <option key={bank} value={bank}>{bank}</option>
+                                    ))}
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 pt-1 text-gray-500">
+                                    <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </FormField>
+
+                        <FormField label="Bank Account" error={errors.bankAccount}>
+                            <input
+                                type="text"
+                                value={bankAccount}
+                                onChange={(e) => setBankAccount(e.target.value)}
+                                className="mt-1 w-full rounded-2xl border border-border bg-white px-3 py-2 shadow-sm focus:outline-none"
+                                placeholder="Account Number"
+                            />
+                        </FormField>
+                    </div>
+
                     {/* Current Password */}
                     <FormField label="Current Password" required error={errors.currentPassword}>
                         <div className="mt-1 relative">
@@ -515,9 +559,10 @@ export const Setting = () => {
                     <div className="mt-4 flex items-center justify-end">
                         <button
                             type="submit"
+                            disabled={isPendingUpdateProfile}
                             className="cursor-pointer rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary"
                         >
-                            Save Changes
+                            {isPendingUpdateProfile ? 'Updating...' : 'Save Changes'}
                         </button>
                     </div>
                 </form>

@@ -13,7 +13,7 @@ export function buildProfilingPayload(profile, answers, user) {
       occupation: profile.occupation,
       phoneNumber: profile.phoneNumber,
       bornDate: profile.bornDate,
-      email: profile.email || user?.data?.email,
+      email: profile.email || user?.email,
     },
     answers: normalizedAnswers,
   };

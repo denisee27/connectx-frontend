@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MapPin, Briefcase, Zap, Brain, Mail, Globe, User, Mars, Venus, Sparkles, Heart, Utensils, Handshake, CalendarCheck } from "lucide-react";
+import { MapPin, Briefcase, Zap, Brain, Mail, Globe, User, Mars, Venus, Sparkles, Heart, Utensils, Handshake, CalendarCheck, CreditCard } from "lucide-react";
 import { useProfile } from "../hooks/useProfile";
 import Markdown from "react-markdown";
 import { FadeIn } from "../../../shared/components/ui/FadeIn.jsx";
@@ -18,7 +18,6 @@ import { env } from "../../../core/config/env.js";
  */
 export const Profile = () => {
     const { data: profile, isLoading, isError } = useProfile();
-    console.log('profile', profile);
     const navigate = useNavigate();
     const { isAuthenticated } = useAuth();
     const [showLoginModal, setShowLoginModal] = useState(false);
@@ -71,6 +70,10 @@ export const Profile = () => {
                                         <Badge icon={MapPin} text={profile?.city?.name} />
                                         <Badge icon={Globe} text={profile?.country?.name} />
                                         <Badge icon={Briefcase} text={profile?.occupation} />
+                                        {console.log('bank', profile)}
+                                        {profile?.bankName && (
+                                            <Badge icon={CreditCard} text={`${profile?.bankName} - ${profile?.bankAccount}`} />
+                                        )}
                                     </div>
 
                                     {/* Stats */}

@@ -83,8 +83,11 @@ export const useAuthStore = create((set, get) => ({
    * Fetches the current user's information to restore session
    * @returns {Promise<boolean>} True if session restored successfully
    */
-  getMe: async () => {
-    set({ status: "loading" });
+  getMe: async (loading = true) => {
+    console.log("getMe loading", loading);
+    if (loading) {
+      set({ status: "loading" });
+    }
     try {
       const userData = await getMeApi();
       const newAccessToken = userData.accessToken || get().accessToken;

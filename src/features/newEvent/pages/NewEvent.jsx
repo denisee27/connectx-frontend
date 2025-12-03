@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { Sparkles, Send } from "lucide-react";
-import { useCreateRoom, useGetSessionChat, useSendMessage } from "../hooks/useNewEvent";
+import { useCreateRoom, useGetSessionChat, useSendMessage, useUpdateBankProfile } from "../hooks/useNewEvent";
 import Markdown from "react-markdown";
 import { SyncLoader } from "react-spinners";
 import { useCategories } from "../../dashboard/hooks/useDashboard";
@@ -10,6 +10,7 @@ import { useCountries } from "../../listEvent/hooks/useListEvent";
 import { useCities } from "../../profiling/hooks/useProfiling";
 import { useAuth } from "../../../core/auth/useAuth";
 import { LoginModal } from "../../auth/components/LoginModal";
+import { useAuthStore } from "../../auth/stores/authStore";
 
 const LoadingIndicator = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-md transition-all">
@@ -43,14 +44,17 @@ const LoadingIndicator = () => (
 export const NewEvent = () => {
     const navigate = useNavigate();
     const { mutateAsync: startSession, isPending: isPendingSession } = useGetSessionChat();
-    const { mutateAsync: sendMessage } = useSendMessage();
+    const { mutateAsync: sendMessage, isPending: isPendingSendMessage } = useSendMessage();
+    const { mutateAsync: updateBankProfile } = useUpdateBankProfile();
     const [step, setStep] = useState("intro"); // intro | chat | form
     const [sessionId, setSessionId] = useState(null);
     const [selectedCountry, setSelectedCountry] = useState("");
     const { data: categories = [], isLoading: isLoadingCategories } = useCategories();
     const { data: countries = [], isLoading: isLoadingCountries } = useCountries();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user } = useAuth();
+    const getMe = useAuthStore((state) => state.getMe);
     const [showLoginModal, setShowLoginModal] = useState(false);
+    const [showBankModal, setShowBankModal] = useState(false);
     const {
         data: cities,
         isLoading: isLoadingCities,
@@ -82,6 +86,7 @@ export const NewEvent = () => {
         categoryId: "",
         description: "",
         imageFile: null,
+        price: "0",
     });
     const [errors, setErrors] = useState({});
     const [submitState, setSubmitState] = useState("idle"); // idle | success | error
@@ -140,7 +145,19 @@ export const NewEvent = () => {
         imageFile: z.custom((val) => val instanceof File, {
             message: "Event image is required",
         }),
+        price: z
+            .string()
+            .optional()
+            .refine(
+                (val) => {
+                    if (!val || val === "0") return true; // 0 or empty means free
+                    const num = parseInt(val, 10);
+                    return !isNaN(num) && num >= 5000;
+                },
+                { message: "Minimum price is Rp 5.000" }
+            ),
     });
+
 
     useEffect(() => {
         if (!isAuthenticated) {
@@ -187,7 +204,6 @@ export const NewEvent = () => {
         const userMsg = { role: "user", text: data };
         setMessages((prev) => [...prev, userMsg, { role: "loading", text: "" }]);
         const restMsg = await sendMessage({ data, sessionId });
-        console.log("restMsg", restMsg);
         setMessages((prevMessages) => prevMessages.slice(0, -1));
         if (!restMsg?.data?.structuredPayload) {
             const assistantMsg = { role: "assistant", text: restMsg?.data?.plainText };
@@ -211,6 +227,7 @@ export const NewEvent = () => {
             cityId: payload?.city_id ?? "",
             categoryId: payload?.category_id ?? "",
             description: payload?.description ?? "",
+            price: "0",
         };
         setForm(nextForm);
         if (payload?.country_id) {
@@ -307,13 +324,13 @@ export const NewEvent = () => {
             fd.append("datetime", new Date(form.datetime).toISOString());
             fd.append("address", form.locationDetail || "");
             fd.append("gmaps", form.mapsUrl || "");
+            fd.append("price", form.price || "0");
             const maxP =
                 Number(form.max_participant) ||
                 (form.type === "event" ? 0 : form.type === "meetup" ? 20 : form.type === "dinner" ? 6 : 0);
             fd.append("maxParticipant", String(maxP));
 
             const res = await createRoom(fd);
-            console.log("createRoom result", res);
             setSubmitState("success");
             setShowSuccessModal(true);
         } catch (err) {
@@ -418,7 +435,7 @@ export const NewEvent = () => {
                     ) : (
                         // Form Card
                         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                            <h2 className="text-xl font-semibold">Event Details</h2>
+                            <h2 className="text-xl font-semibold">Event Detail</h2>
                             <p className="mt-1 text-sm text-muted-foreground">
                                 Complete the information below to get your event ready.
                             </p>
@@ -489,6 +506,47 @@ export const NewEvent = () => {
                                         className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 shadow-sm focus:outline-none"
                                         placeholder="e.g., 15"
                                     />
+                                </div>
+
+                                {/* Price */}
+                                <div>
+                                    <label className="text-sm font-medium">Price</label>
+                                    <div className="relative mt-1">
+                                        {/* Prefix "Rp" */}
+                                        {console.log(user?.data?.bankName)}
+                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                            <span className="text-gray-500 sm:text-sm font-medium">Rp</span>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={
+                                                form.price === "0" || form.price === 0
+                                                    ? "Free"
+                                                    : new Intl.NumberFormat("id-ID").format(form.price)
+                                            }
+                                            onClick={() => {
+                                                if (!user?.data?.bankName) {
+                                                    setShowBankModal(true);
+                                                }
+                                            }}
+                                            onChange={(e) => {
+                                                if (!user?.data?.bankName) {
+                                                    setShowBankModal(true);
+                                                    return;
+                                                }
+                                                // Remove non-numeric chars
+                                                const val = e.target.value.replace(/[^0-9]/g, "");
+                                                // Store raw number string in state
+                                                setForm({ ...form, price: val === "" ? "0" : val });
+                                            }}
+                                            className="w-full rounded-xl border border-border bg-white pl-10 pr-3 py-2 shadow-sm focus:outline-none"
+                                            placeholder="Free"
+                                        />
+                                    </div>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        Default is Free. Typing a number will set a price (Bank info required).
+                                    </p>
+                                    {errors.price && <p className="mt-1 text-xs text-red-600">{errors.price}</p>}
                                 </div>
 
                                 {/* Place Name */}
@@ -696,6 +754,7 @@ export const NewEvent = () => {
                             <textarea
                                 ref={textareaRef}
                                 rows={1}
+                                disabled={isPendingSendMessage}
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => {
@@ -710,6 +769,7 @@ export const NewEvent = () => {
                             />
                             <button
                                 type="button"
+                                disabled={isPendingSendMessage}
                                 onClick={handleSend}
                                 className="hover:cursor-pointer inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-sm transition-colors hover:bg-primary"
                                 aria-label="Send"
@@ -733,6 +793,109 @@ export const NewEvent = () => {
                     setShowLoginModal(false);
                 }}
             />
+
+            <BankInfoModal
+                isOpen={showBankModal}
+                onClose={() => setShowBankModal(false)}
+                onSuccess={() => {
+                    setShowBankModal(false);
+                    useAuthStore.getState().getMe(false);
+                }}
+                updateBankProfile={updateBankProfile}
+            />
+        </div>
+    );
+};
+
+const BankInfoModal = ({ isOpen, onClose, onSuccess, updateBankProfile }) => {
+    const [bankName, setBankName] = useState("");
+    const [bankAccount, setBankAccount] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    if (!isOpen) return null;
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setError("");
+        if (!bankName || !bankAccount) {
+            setError("Both fields are required.");
+            return;
+        }
+        setIsLoading(true);
+        try {
+            await updateBankProfile({ bankName, bankAccount });
+            onSuccess();
+        } catch (err) {
+            console.error("Update bank failed", err);
+            setError("Failed to update bank info. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl animate-in fade-in zoom-in duration-200">
+                <h3 className="text-xl font-bold mb-2">Bank Information Required</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                    To set a price for your event, you must provide your bank details first.
+                </p>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Bank Name</label>
+                        <div className="relative">
+                            <select
+                                value={bankName}
+                                onChange={(e) => setBankName(e.target.value)}
+                                className="w-full rounded-xl border border-border bg-white px-3 py-2 shadow-sm focus:outline-none appearance-none"
+                            >
+                                <option value="">Select Bank</option>
+                                {["BCA", "MANDIRI", "BRI", "BNI"].map((bank) => (
+                                    <option key={bank} value={bank}>{bank}</option>
+                                ))}
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                                <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Bank Account Number</label>
+                        <input
+                            type="text"
+                            value={bankAccount}
+                            onChange={(e) => setBankAccount(e.target.value)}
+                            className="w-full rounded-xl border border-border bg-white px-3 py-2 shadow-sm focus:outline-none"
+                            placeholder="e.g. 1234567890"
+                        />
+                    </div>
+
+                    {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
+
+                    <div className="flex justify-end gap-3 mt-6">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="rounded-full px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-secondary disabled:opacity-70"
+                        >
+                            {isLoading ? "Saving..." : "Save & Continue"}
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     );
 };
@@ -743,6 +906,7 @@ const ChatBubble = ({ role, text }) => {
     return (
         <div className={"flex " + (isUser ? "justify-end" : "justify-start")}>
             <div
+
                 className={
                     (isUser ? "bg-primary text-white" : "bg-card text-foreground") +
                     " max-w-[680px] rounded-3xl border border-border px-4 py-3 shadow-sm transition-all"
@@ -752,15 +916,15 @@ const ChatBubble = ({ role, text }) => {
                     animation: "fadeInUp 280ms ease-out both",
                 }}
             >
-                <p className="text-sm sm:text-base leading-relaxed">
-                    {role === "loading" ? (
+                {role === "loading" ? (
+                    <p className="text-sm sm:text-base leading-relaxed">
                         <div className="h-2 justify-center items-center flex px-2 py-1">
                             <SyncLoader size={6} color="#FF9836" />
                         </div>
-                    ) : (
-                        <Markdown>{text}</Markdown>
-                    )}
-                </p>
+                    </p>
+                ) : (
+                    <Markdown>{text}</Markdown>
+                )}
             </div>
             {/* lightweight keyframe for smooth pop-in */}
             <style>{`

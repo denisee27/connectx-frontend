@@ -90,8 +90,9 @@ export default function Event() {
   const navigate = useNavigate();
   const [latestOrderId, setLatestOrderId] = useState(null);
   const { data: polledPaymentStatus } = useStatusPayment(latestOrderId);
+  const vat = 0.1;
   const registrationFee = useMemo(() => {
-    const rawPrice = event?.price ?? event?.fee ?? event?.registrationFee ?? 5000;
+    const rawPrice = event?.price ?? 0;
     const numericPrice = Number(rawPrice);
     if (Number.isNaN(numericPrice) || !Number.isFinite(numericPrice)) {
       return 5000;
@@ -124,17 +125,17 @@ export default function Event() {
       return;
     }
 
-    if (isUserPaid) {
+    if (event?.price <= 0) {
       setConfirmationOpen(true);
-    } else {
-      setPaymentOpen(true);
+      return;
     }
+
+    setPaymentOpen(true);
   };
 
   const handleLoginSuccess = () => {
     setLoginOpen(false);
-    // Requirement: setelah login akan masuk ke popup confirmation join this event
-    setConfirmationOpen(true);
+    setPaymentOpen(true);
   };
 
   const handleConfirmationJoin = async () => {
@@ -219,8 +220,8 @@ export default function Event() {
                         <span>
                           {event?.address}
                           {event?.city?.name && `, ${event.city.name}`}
+                          {event?.gmaps && <ExternalLink size={12} />}
                         </span>
-                        {event?.gmaps && <ExternalLink size={12} />}
                       </a>
 
                       <span className="inline-flex items-center gap-1">
@@ -437,41 +438,48 @@ export default function Event() {
           </FadeIn>
         )}
 
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-glass backdrop-blur supports-[backdrop-filter]:bg-glass">
-          <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3 sm:px-6 md:px-8">
-            {event?.isCreator ? (
-              <div className="w-full text-center py-3 font-semibold text-primary">
-                You are the Host of this Event ✨
-              </div>
-            ) : event?.isJoining ? (
-              <div className="w-full text-center py-3 font-semibold text-green-600">
-                You have already joined this Event ✅
-              </div>
-            ) : (
-              <>
-                <div className="text-sm text-muted-foreground">
-                  {!isUserPaid && (
-                    <>
-                      Registration Fee:{" "}
-                      <span className="font-semibold text-foreground">
-                        Rp {registrationFee.toLocaleString("id-ID")}
-                      </span>
-                    </>
-                  )}
+        {event && (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-glass backdrop-blur supports-[backdrop-filter]:bg-glass">
+            <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3 sm:px-6 md:px-8">
+              {event?.isCreator ? (
+                <div className="w-full text-center py-3 font-semibold text-primary">
+                  You are the Host of this Event ✨
                 </div>
-                <button
-                  onClick={handleJoinClick}
-                  disabled={isJoining || isEventFull}
-                  className={`w-full max-w-xs font-semibold py-3 px-6 rounded-full transition-colors duration-300 text-white ${isEventFull ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-secondary"
-                    }`}
-                >
-                  {isEventFull ? "Full Booked" : "Join This Event"}
-                </button>
-              </>
-            )}
+              ) : event?.isJoining ? (
+                <div className="w-full text-center py-3 font-semibold text-green-600">
+                  You have already joined this Event ✅
+                </div>
+              ) : (
+                <>
+                  <div className="text-sm text-muted-foreground">
+                    {!isUserPaid && (
+                      <>
+                        Registration Fee:{" "}
+                        <span className="font-semibold text-foreground">
+                          {event?.price > 0 ? (
+                            <>
+                              Rp {registrationFee.toLocaleString("id-ID")}
+                            </>
+                          )
+                            : "Free"}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleJoinClick}
+                    disabled={isJoining || isEventFull}
+                    className={`w-full max-w-xs font-semibold py-3 px-6 rounded-full transition-colors duration-300 text-white ${isEventFull ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-secondary"
+                      }`}
+                  >
+                    {isEventFull ? "Full Booked" : "Join This Event"}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      </div >
+        )}
+      </div>
 
       <LoginModal
         isOpen={isLoginOpen}
@@ -492,6 +500,7 @@ export default function Event() {
         onClose={() => setPaymentOpen(false)}
         onSuccess={handlePaymentSuccess}
         event={event}
+        vat={vat}
         price={registrationFee}
       />
 
@@ -507,15 +516,15 @@ export default function Event() {
   );
 }
 
-function PaymentModal({ isOpen, onClose, onSuccess, event, price }) {
+function PaymentModal({ isOpen, onClose, onSuccess, event, price, vat }) {
   const { user } = useAuth();
 
   const { mutateAsync: createPayment, isPending } = useCreatePayment();
   const [orderId, setOrderId] = useState();
 
   const [payError, setPayError] = useState("");
-  const vatBase = 5000;
-  const vatRate = 0.10;
+  const vatBase = event?.price ?? 0;
+  const vatRate = vat ?? 0.1;
   const vatAmount = (vatBase * vatRate);
 
   const amount = useMemo(() => {
@@ -535,7 +544,7 @@ function PaymentModal({ isOpen, onClose, onSuccess, event, price }) {
   const buildCustomerPayload = () => {
     if (!user) return undefined;
 
-    const fullName = (user.data.name || "").trim();
+    const fullName = (user.name || "").trim();
     const nameParts = fullName.split(/\s+/).filter(Boolean);
     let firstName = null;
     let lastName = null;
@@ -549,8 +558,8 @@ function PaymentModal({ isOpen, onClose, onSuccess, event, price }) {
     return {
       firstName: firstName || undefined,
       lastName: lastName || undefined,
-      email: user?.data?.email,
-      phone: user?.data?.phoneNumber || user?.data?.phoneNumber,
+      email: user?.email,
+      phone: user?.phoneNumber || user?.phoneNumber,
     };
   };
 
@@ -620,7 +629,7 @@ function PaymentModal({ isOpen, onClose, onSuccess, event, price }) {
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">VAT 10% of Rp {vatBase.toLocaleString("id-ID")}</span>
+            <span className="text-xs text-muted-foreground">VAT 10% of Rp {amount.toLocaleString("id-ID")}</span>
             <span className="text-sm font-medium text-card-foreground">
               Rp {vatAmount.toLocaleString("id-ID")}
             </span>

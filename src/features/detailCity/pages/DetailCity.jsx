@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ExternalLink, MapPin, Users, CalendarCheck, Handshake, Utensils, ExternalLinkIcon } from "lucide-react";
-import api from "../../../core/api/index.js";
-import { useCategory } from "../hooks/useCategory.js";
 import SkeletonLoader from "../../../shared/components/ui/SkeletonLoader.jsx";
 import { FadeIn } from "../../../shared/components/ui/FadeIn.jsx";
 import { env } from "../../../core/config/env.js";
+import { useCity } from "../hooks/useCity.js";
 
 const labelDay = (iso) => {
     const d = new Date(iso);
@@ -15,45 +14,88 @@ const labelDay = (iso) => {
     return { dayLabel: `${monthShort} ${day}`, dayName: weekday, time: d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) };
 };
 
+function HeaderSection({ title, description, latitude, longitude, countryName }) {
 
-function HeaderSection({ title, description, banner, icon }) {
-    const cleanBanner = banner ? String(banner).replace(/`/g, "").trim() : "";
+    // Fungsi untuk membersihkan data input yang kotor
+    const cleanCoordinate = (val, type) => {
+        if (!val) return 0;
+
+        // 1. Bersihkan jika ada text aneh (misal: "31 106.82" -> ambil yg belakang atau format ulang)
+        // Kita ubah ke string dulu, lalu parse ulang
+        let strVal = String(val).trim();
+
+        // Jika inputnya seperti "31 106.82", kita coba ambil angka terakhir yang masuk akal
+        // atau langsung parseFloat. 
+        let num = parseFloat(strVal);
+
+        // 2. Logika Normalisasi (Perbaikan untuk kasus -61.75 Jakarta)
+        const max = type === 'lat' ? 90 : 180;
+
+        // Loop pembagian standar
+        while (Math.abs(num) > max && num !== 0) {
+            num /= 10;
+        }
+
+        // HACK KHUSUS: Jika ini Jakarta (indonesia) tapi angkanya puluhan (misal -61),
+        // kemungkinan besar data source-nya salah koma. 
+        // Latitude Jakarta itu sekitar -6, bukan -61.
+        // Kita paksa bagi 10 lagi jika user berada di Indonesia dan latitudenya > 10 atau < -10
+        // (Ini optional, tapi solusi cepat untuk data Anda yang -61.75)
+        if (type === 'lat' && Math.abs(num) > 15 && countryName?.toLowerCase() === 'indonesia') {
+            num /= 10;
+        }
+
+        return num;
+    };
+
+    const lat = cleanCoordinate(latitude, 'lat');
+    const lng = cleanCoordinate(longitude, 'lng');
+
+    // URL Peta yang BENAR
+    // Menggunakan https://maps.google.com/maps
+    // Parameter q = query (koordinat)
+    // Parameter z = zoom
+    // Parameter output = embed (tampilan iframe)
+    const mapSrc = `https://maps.google.com/maps?q=${lat},${lng}&z=12&output=embed`;
 
     return (
         <section className="relative rounded-3xl bg-white text-foreground shadow-sm border border-border overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-5">
                 <div className="p-8 sm:p-10 lg:col-span-3 flex flex-col justify-center">
-                    {icon && (
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-xl">
-                                {icon}
-                            </div>
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 bg-primary/10 rounded-full text-primary">
+                            <MapPin className="w-6 h-6" />
                         </div>
-                    )}
-                    <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900 mb-6">{title}</h1>
+                        <span className="text-sm font-semibold text-primary tracking-wide uppercase">City Guide</span>
+                    </div>
+                    <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900 mb-6">{title} - {countryName}</h1>
                     <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
-                        {description}
+                        {description || `Explore the best events and communities in ${title}. Discover meetups, workshops, and gatherings happening around you.`}
                     </p>
                 </div>
 
-                {/* Image Section */}
+                {/* Bagian Peta */}
                 <div className="relative h-64 lg:h-auto lg:col-span-2 min-h-[320px] bg-muted border-t lg:border-t-0 lg:border-l border-border">
-                    {cleanBanner ? (
-                        <img
-                            src={cleanBanner}
-                            alt={title}
-                            className="absolute inset-0 w-full h-full object-cover"
-                            loading="lazy"
-                        />
-                    ) : (
-                        <div className="flex h-full w-full items-center justify-center text-muted-foreground">Image</div>
-                    )}
+                    <iframe
+                        title={`Map of ${title}`}
+                        width="100%"
+                        height="100%"
+                        frameBorder="0"
+                        scrolling="no"
+                        marginHeight="0"
+                        marginWidth="0"
+                        src={mapSrc}
+                        className="absolute inset-0 w-full h-full"
+                        style={{ filter: "grayscale(0.2) contrast(1.1)" }}
+                        loading="lazy"
+                    />
                     <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_20px_rgba(0,0,0,0.05)]"></div>
                 </div>
             </div>
         </section>
     );
 }
+
 
 // Event Card (copied structure & styling from Schedule.jsx)
 const EventCard = ({ time, title, location, guests, thumbnail, onClick, type, placeName, gmaps }) => {
@@ -91,7 +133,7 @@ const EventCard = ({ time, title, location, guests, thumbnail, onClick, type, pl
                         >
                             <MapPin size={16} />
                             {placeName}
-                            {gmaps && <ExternalLinkIcon size={16} />}
+                            <ExternalLinkIcon size={16} />
                         </a>
                     )}
                     {!placeName && <span className="inline-flex items-center gap-1"><MapPin size={16} /> {location}</span>}
@@ -112,10 +154,11 @@ const EventCard = ({ time, title, location, guests, thumbnail, onClick, type, pl
     );
 };
 
-export const DetailCategory = () => {
+export const DetailCity = () => {
     const navigate = useNavigate();
     const { slug } = useParams();
-    const { data: categoryData, isPending: isPendingCategory } = useCategory(slug);
+    const { data: cityData, isPending: isPendingCity } = useCity(slug);
+    console.log(cityData)
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -124,7 +167,7 @@ export const DetailCategory = () => {
     return (
         <div className="bg-white">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 text-foreground ">
-                {isPendingCategory ? (
+                {isPendingCity ? (
                     <div className="space-y-6">
                         <SkeletonLoader className="h-48 w-full rounded-3xl" />
                         <div className="space-y-4">
@@ -133,8 +176,14 @@ export const DetailCategory = () => {
                         </div>
                     </div>
                 ) : (
-                    <FadeIn show={!isPendingCategory}>
-                        <HeaderSection title={categoryData?.name} description={categoryData?.description} banner={categoryData?.banner} icon={categoryData?.icon} />
+                    <FadeIn show={!isPendingCity}>
+                        <HeaderSection
+                            title={cityData?.name}
+                            description={cityData?.description}
+                            latitude={cityData?.latitude}
+                            longitude={cityData?.longitude}
+                            countryName={cityData?.country?.name}
+                        />
                     </FadeIn>
                 )}
 
@@ -159,7 +208,7 @@ export const DetailCategory = () => {
 
                             {(() => {
                                 const grouped = new Map();
-                                categoryData?.rooms?.forEach((it) => {
+                                cityData?.rooms?.forEach((it) => {
                                     const { dayLabel, dayName, time } = labelDay(it.datetime);
                                     const entry = grouped.get(dayLabel) || { dayLabel, dayName, items: [] };
                                     entry.items.push({ ...it, time });
@@ -216,4 +265,4 @@ export const DetailCategory = () => {
     );
 };
 
-export default DetailCategory;
+export default DetailCity;

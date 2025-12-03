@@ -191,7 +191,7 @@ const EventCard = ({ time, title, location, guests, banner, onClick, type, gmaps
                 <div className="mt-2 md:mt-3 flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm text-muted-foreground">
                     {placeName && gmaps && (
                         <a
-                            href={gmaps}
+                            href={gmaps || "#"}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
@@ -199,6 +199,7 @@ const EventCard = ({ time, title, location, guests, banner, onClick, type, gmaps
                         >
                             <MapPin size={16} />
                             {placeName}
+                            {gmaps && <ExternalLink size={12} />}
                         </a>
                     )}
                     {!placeName && <span className="inline-flex items-center gap-1"><MapPin size={16} /> {location}</span>}
