@@ -91,7 +91,21 @@ export const Navbar = ({ scrollToElement }) => {
                     onClose={() => setIsMenuOpen(false)}
                     className="flex md:hidden"
                     position="right"
-                    items={menuItems.map(item => ({ ...item, onClick: (e) => handleScroll(e, item.link.substring(1)) }))}
+                    items={menuItems.map(item => ({
+                        ...item,
+                        onClick: (e) => {
+                            // Jika link adalah hash (scroll), prevent default dan jalankan scroll
+                            if (item.link && !item.link.startsWith('/')) {
+                                e.preventDefault();
+                                handleScroll(e, item.link);
+                            } else {
+                                // Jika link adalah path, gunakan navigate (opsional, jika perlu SPA navigation)
+                                e.preventDefault();
+                                navigate(item.link);
+                                setIsMenuOpen(false);
+                            }
+                        }
+                    }))}
                     socialItems={socialItems}
                     displaySocials={false}
                     displayItemNumbering={false}

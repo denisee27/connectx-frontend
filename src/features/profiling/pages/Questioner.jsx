@@ -15,7 +15,6 @@ import { useAuth } from "../../../core/auth/useAuth";
 
 function Loading({ isComplete }) {
     const [progress, setProgress] = useState(0);
-
     useEffect(() => {
         if (isComplete) {
             setProgress(100);
@@ -205,6 +204,7 @@ export default function Questioner() {
                 navigate("/profiling/preference");
                 return
             }
+            
             navigate("/profiling/suggestion");
         } catch (e) {
             const message = e?.message || "An error occurred while saving the answers.";

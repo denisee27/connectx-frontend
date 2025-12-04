@@ -7,6 +7,7 @@ import { Footer } from "../components/Footer";
 import { Purpose } from "../components/Purpose";
 import { useScrollTo } from "../../../shared/hooks/useScrollTo";
 import { useEffect } from "react";
+import { ReadyToMake } from "../components/ReadyToMake";
 
 function MainPage() {
     const { scrollToElement } = useScrollTo();
@@ -33,6 +34,9 @@ function MainPage() {
             </div>
             <div id="how-it-works">
                 <HowItWorks />
+            </div>
+            <div id="ready-to-make">
+                <ReadyToMake />
             </div>
             <Footer scrollToElement={scrollToElement} />
         </div>

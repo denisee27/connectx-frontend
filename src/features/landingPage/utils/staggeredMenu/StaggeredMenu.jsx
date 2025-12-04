@@ -398,16 +398,26 @@ export const StaggeredMenu = ({
                         {items && items.length ? (
                             items.map((it, idx) => (
                                 <li className="sm-panel-itemWrap" key={it.label + idx}>
-                                    <a className="sm-panel-item" href={it.link} aria-label={it.ariaLabel} data-index={idx + 1} onClick={(e) => handleItemClick(e, it)}>
+                                    <a
+                                        className="sm-panel-item"
+                                        href={it.link}
+                                        onClick={(e) => {
+                                            // Call item's custom onClick if provided (e.g. scrolling)
+                                            if (it.onClick) {
+                                                it.onClick(e);
+                                            }
+                                            // Close menu if it's a scroll link or if handled by parent
+                                            if (onClose) onClose();
+                                            toggleMenu();
+                                        }}
+                                    >
                                         <span className="sm-panel-itemLabel">{it.label}</span>
                                     </a>
                                 </li>
                             ))
                         ) : (
-                            <li className="sm-panel-itemWrap" aria-hidden="true">
-                                <span className="sm-panel-item">
-                                    <span className="sm-panel-itemLabel">No items</span>
-                                </span>
+                            <li className="sm-panel-itemWrap">
+                                <span className="sm-panel-item">No items</span>
                             </li>
                         )}
                     </ul>

@@ -590,7 +590,6 @@ function PaymentModal({ isOpen, onClose, onSuccess, event, price, vat }) {
       if (!paymentData?.orderId) {
         throw new Error("Payment failed, please try again.");
       }
-      console.log("Payment Data:", paymentData);
       setOrderId(paymentData?.orderId);
       if (paymentData?.redirectUrl) {
         window.open(paymentData.redirectUrl, "_blank", "noopener,noreferrer");

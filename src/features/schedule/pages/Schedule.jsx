@@ -192,7 +192,6 @@ const EventCard = ({ time, title, location, guests, banner, onClick, type, gmaps
                     {placeName && gmaps && (
                         <a
                             href={gmaps || "#"}
-                            target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
                             className="inline-flex items-center gap-1 hover:text-primary transition-colors z-10"

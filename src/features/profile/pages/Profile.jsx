@@ -79,31 +79,10 @@ export const Profile = () => {
 
                                     {/* Stats */}
                                     <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:max-w-3xl mx-auto sm:mx-0">
-                                        <StatCard icon={Utensils} label={'Dinners'} value={profile?.joinedRoomCounts?.dinner} />
-                                        <StatCard icon={Handshake} label={'Meetups'} value={profile?.joinedRoomCounts?.meetup} />
-                                        <StatCard icon={CalendarCheck} label={'Events'} value={profile?.joinedRoomCounts?.event} />
-                                        <StatCard icon={Ticket} label={'Creator'} value={profile?.joinedRoomCounts?.roomCreated} valueClass="text-lg truncate max-w-[120px] sm:max-w-none" />
-                                        {/* {!profile?.bankName ? (
-                                            <StatCard
-                                                icon={CreditCard}
-                                                label={profile?.bankName}
-                                                value={profile?.bankAccount}
-                                                valueClass="text-lg truncate max-w-[120px] sm:max-w-none"
-                                            />
-                                        ) : (
-                                            <div
-                                                onClick={() => {
-                                                    setActiveTab("payment");
-                                                    setShowBankModal(true);
-                                                }}
-                                                className="rounded-2xl bg-card border border-dashed border-border p-4 text-center shadow-sm cursor-pointer hover:bg-muted/50 transition-colors flex flex-col items-center justify-center gap-2 h-full"
-                                            >
-                                                <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                                    <Plus size={16} />
-                                                </div>
-                                                <span className="text-xs font-medium text-muted-foreground">Add Bank Info</span>
-                                            </div>
-                                        )} */}
+                                        <StatCard icon={Utensils} type={'Attended'} label={'Dinners'} value={profile?.joinedRoomCounts?.dinner} />
+                                        <StatCard icon={Handshake} type={'Attended'} label={'Meetups'} value={profile?.joinedRoomCounts?.meetup} />
+                                        <StatCard icon={CalendarCheck} type={'Attended'} label={'Events'} value={profile?.joinedRoomCounts?.event} />
+                                        <StatCard icon={Ticket} type={'Hosted'} label={'Activity'} value={profile?.joinedRoomCounts?.roomCreated} valueClass="text-lg truncate max-w-[120px] sm:max-w-none" />
                                     </div>
 
                                     {/* Preferences / Interests */}
@@ -354,13 +333,20 @@ const Badge = ({ icon: Icon, text }) => (
 
 
 /** Stat card */
-const StatCard = ({ icon: Icon, label, value }) => (
-    <div className="rounded-2xl bg-card border border-border p-4 text-center shadow-sm">
-        <div className="mx-auto mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
+const StatCard = ({ icon: Icon, label, value, type }) => (
+    <div className="rounded-2xl bg-card border border-border p-4 text-center shadow-sm h-full flex flex-col items-center justify-center gap-1">
+        <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
             <Icon size={18} className="text-secondary" />
         </div>
-        <div className="text-2xl font-bold leading-none">{value}</div>
-        <div className="text-xs text-muted-foreground mt-1">{label}</div>
+        <div className={`font-bold leading-none ${"text-2xl"}`}>{value}</div>
+        {/* <div className={`text-xs mt-1 ${label !== 'Hosted' ? 'text-muted-foreground' : 'invisible select-none'}`}>
+            {type}
+        </div> */}
+        {/* Gunakan gap-0 untuk nempel, atau gap-0.5 untuk jarak tipis */}
+        <div className="flex flex-col gap-0">
+            <div className="text-xs text-muted-foreground">{type}</div>
+            <div className="text-xs text-muted-foreground">{label}</div>
+        </div>
     </div>
 );
 
