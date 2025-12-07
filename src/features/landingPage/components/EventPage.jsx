@@ -55,6 +55,7 @@ export default function Event() {
                                 </div>
 
                                 <button
+                                    onClick={() => navigate('/home/event/' + event?.slug)}
                                     className="w-full bg-primary text-white font-semibold py-2 rounded-4xl hover:bg-secondary cursor-pointer transition duration-300 mt-auto"
                                 >
                                     Join Event
