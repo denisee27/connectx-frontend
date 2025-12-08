@@ -1,6 +1,6 @@
-# Frontend Template
+# ConnectX Frontend
 
-A Front end template with tanstackquery and other libraries.
+A Frontend template for ConnectX with tanstackquery and other libraries.
 
 ---
 
@@ -78,7 +78,7 @@ src/
 
 ```bash
 git clone <repo-url>
-cd frontend-template
+cd connectx-fe
 npm install
 ```
 
